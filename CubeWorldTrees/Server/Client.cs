@@ -1,7 +1,9 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Net;
 using System.Diagnostics;
 
@@ -14,6 +16,7 @@ namespace CubeWorldTrees.Server
 
         HttpListenerContext context;
         Server server;
+        Map.MapGenerator generator = new Map.MapGenerator(256, 256);
 
         #endregion parameters
 
@@ -23,6 +26,7 @@ namespace CubeWorldTrees.Server
         {
             context = Context;
             server = Server;
+            generator.Generate();
         }
 
         #endregion constructs
@@ -35,16 +39,76 @@ namespace CubeWorldTrees.Server
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            string msg = "Welcome!";
+            Uri url = context.Request.Url;
+            string regex = @"^(/[a-zA-Z0-9]*)*[.](png|jpg|js|css)$";
+            Regex imgRegex = new Regex(regex);
 
-            StringBuilder sb = new StringBuilder();
-            sb.Append("<html><body><h1>" + msg + "</h1>");
-            sb.Append("</body></html>");
-  
-            byte[] b = Encoding.UTF8.GetBytes(sb.ToString());
-            context.Response.ContentLength64 = b.Length;
-            context.Response.OutputStream.Write(b, 0, b.Length);
-            context.Response.OutputStream.Close();
+            //image requested
+            if (imgRegex.IsMatch(url.AbsolutePath))
+            {
+                string imgFile = "." + url.AbsolutePath;
+
+                if (!File.Exists(imgFile))
+                {
+                    //TODO: 404 file not found
+                    context.Response.OutputStream.Close();
+                }
+                else
+                {
+                    FileInfo fInfo = new FileInfo(imgFile);
+                    
+                    long numBytes = fInfo.Length;
+                    FileStream fStream = new FileStream(imgFile, FileMode.Open, FileAccess.Read);
+                    BinaryReader br = new BinaryReader(fStream);
+                    byte[] bOutput = br.ReadBytes((int)numBytes);
+                    br.Close();
+                    fStream.Close();
+
+                    Match match = imgRegex.Match(url.AbsolutePath);  
+
+                    switch (match.Groups[2].Value)
+                    {
+                        case "png":
+                            Console.WriteLine("> Request png!");
+                            context.Response.ContentType = "image/png";
+                            break;
+                        case "jpg":
+                            Console.WriteLine("> Request jpg!");
+                            context.Response.ContentType = "image/jpg";
+                            break;
+                        case "js":
+                            Console.WriteLine("> Request javascript!");
+                            context.Response.ContentType = "application/javascript";
+                            break;
+                        case "css":
+                            Console.WriteLine("> Request css!");
+                            context.Response.ContentType = "text/css";
+                            break;
+                    }
+
+                    context.Response.ContentLength64 = bOutput.Length;
+
+                    Stream OutputStream = context.Response.OutputStream;
+                    OutputStream.Write(bOutput, 0, bOutput.Length);
+                    OutputStream.Close();
+                }
+            }
+            else
+            {
+                if (url.AbsolutePath.Equals("/"))
+                {
+                    Controllers.MapController controler = new Controllers.MapController(context, server.quadTree);
+                    controler.Render();
+                }
+                else if (url.AbsolutePath.Equals("/initialize"))
+                {
+                    //TODO: find Controller
+                    Controllers.MapController controler = new Controllers.MapController(context, server.quadTree);
+                    controler.JSONTest();
+                }
+            }
+
+            
 
             sw.Stop();
             Console.WriteLine("> Request from {0} was completed for {1} ms", context.Request.RemoteEndPoint.Address, sw.ElapsedMilliseconds);

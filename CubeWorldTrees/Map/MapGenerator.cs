@@ -71,6 +71,8 @@ namespace CubeWorldTrees.Map
         public void Generate()
         {
             _world = new Block[width, height];
+            Random rand = new Random();
+            int value;
             Rectangle location;
             
             for (int x = 0; x < width; x++)
@@ -78,7 +80,9 @@ namespace CubeWorldTrees.Map
                 for (int y = 0; y < height; y++)
                 {
                     location = new Rectangle(x, y, 1);
-                    _world[x, y] = new Block(x * y, location);
+                    //_world[x, y] = new Block(x * y, location);
+                    value = rand.Next(1, 3);
+                    _world[x, y] = new Block(value, location);
                 }
             }
 
