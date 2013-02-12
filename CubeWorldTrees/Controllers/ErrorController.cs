@@ -3,33 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Net;
-using System.Web;
 
 namespace CubeWorldTrees.Controllers
 {
-    class MapController : BaseController
+    class ErrorController : BaseController
     {
 
-        protected Trees.QuadTree.QuadTree<Map.Block> quadTree;
-
-        public MapController(HttpListenerContext Context, Trees.QuadTree.QuadTree<Map.Block> QuadTree)
+        public ErrorController(HttpListenerContext Context)
             : base(Context)
         {
-            quadTree = QuadTree;
         }
 
         public override void Render()
         {
-            Uri url = context.Request.Url;
-            
             StringBuilder sb = new StringBuilder();
+
             sb.Append("<html>");
             sb.Append("<head>");
-            sb.Append("<script src='http://code.jquery.com/jquery-1.8.3.min.js'></script>");
-            sb.Append("<script src='/content/js/main.js'></script>");
             sb.Append("</head>");
 
             sb.Append("<body>");
+            sb.Append("<h1>Chyba! Stránka nenalezena</h1>");
             sb.Append("</body>");
             sb.Append("</html>");
 

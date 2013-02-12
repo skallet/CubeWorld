@@ -22,7 +22,6 @@ namespace CubeWorldTrees
             generator.Generate();
             Console.WriteLine("Map generated!");
 
-
             Map.Rectangle space = new Map.Rectangle(0, 0, width);
             Map.Block block;
             Map.Rectangle dot = new Map.Rectangle(0, 0, 1);
@@ -124,11 +123,24 @@ namespace CubeWorldTrees
             Console.ReadKey();
         }
 
+        public static void testSession()
+        {
+            Server.Session session = new Server.Session("test");
+            session.dump();
+
+            Console.WriteLine("Getting name: " + session.get("name"));
+
+            session.set("name", "Test");
+            session.dump();
+
+            session.unset();
+            session.dump();
+        }
+
         static int Main(string[] args)
         {
             Server.Server server = new Server.Server();
-
-            return 0; ;
+            return 0;
         }
     }
 }

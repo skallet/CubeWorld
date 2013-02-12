@@ -35,16 +35,16 @@ namespace CubeWorldTrees.Server
 
         public void processRequest()
         {
-            Console.WriteLine("> Client access from {0}", context.Request.RemoteEndPoint.Address);
+            //Console.WriteLine("> Client access from {0}", context.Request.RemoteEndPoint.Address);
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
             Uri url = context.Request.Url;
             string regex = @"^(/[a-zA-Z0-9]*)*[.](png|jpg|js|css)$";
-            Regex imgRegex = new Regex(regex);
+            Regex fileRegex = new Regex(regex);
 
             //image requested
-            if (imgRegex.IsMatch(url.AbsolutePath))
+            if (fileRegex.IsMatch(url.AbsolutePath))
             {
                 string imgFile = "." + url.AbsolutePath;
 
@@ -64,24 +64,24 @@ namespace CubeWorldTrees.Server
                     br.Close();
                     fStream.Close();
 
-                    Match match = imgRegex.Match(url.AbsolutePath);  
+                    Match match = fileRegex.Match(url.AbsolutePath);  
 
                     switch (match.Groups[2].Value)
                     {
                         case "png":
-                            Console.WriteLine("> Request png!");
+                            //Console.WriteLine("> Request png!");
                             context.Response.ContentType = "image/png";
                             break;
                         case "jpg":
-                            Console.WriteLine("> Request jpg!");
+                            //Console.WriteLine("> Request jpg!");
                             context.Response.ContentType = "image/jpg";
                             break;
                         case "js":
-                            Console.WriteLine("> Request javascript!");
+                            //Console.WriteLine("> Request javascript!");
                             context.Response.ContentType = "application/javascript";
                             break;
                         case "css":
-                            Console.WriteLine("> Request css!");
+                            //Console.WriteLine("> Request css!");
                             context.Response.ContentType = "text/css";
                             break;
                     }
@@ -89,29 +89,43 @@ namespace CubeWorldTrees.Server
                     context.Response.ContentLength64 = bOutput.Length;
 
                     Stream OutputStream = context.Response.OutputStream;
-                    OutputStream.Write(bOutput, 0, bOutput.Length);
-                    OutputStream.Close();
+
+                    try
+                    {
+                        OutputStream.Write(bOutput, 0, bOutput.Length);
+                        OutputStream.Close();
+                    }
+                    catch { }
                 }
             }
             else
             {
-                if (url.AbsolutePath.Equals("/"))
+                Controllers.BaseController controler = null;
+                string absolutePath = url.AbsolutePath;
+
+                switch (absolutePath)
                 {
-                    Controllers.MapController controler = new Controllers.MapController(context, server.quadTree);
-                    controler.Render();
+                    case "/":
+                        controler = new Controllers.MapController(context, server.quadTree);
+                        break;
+                    case "/initialize":
+                        controler = new Controllers.JsonController(context, server.quadTree);
+                        break;
+                    case "/login":
+                        controler = new Controllers.LoginController(context);
+                        break;
+                    default:
+                        controler = new Controllers.ErrorController(context);
+                        break;
                 }
-                else if (url.AbsolutePath.Equals("/initialize"))
-                {
-                    //TODO: find Controller
-                    Controllers.MapController controler = new Controllers.MapController(context, server.quadTree);
-                    controler.JSONTest();
-                }
+
+                controler.Run();
             }
 
             
 
             sw.Stop();
-            Console.WriteLine("> Request from {0} was completed for {1} ms", context.Request.RemoteEndPoint.Address, sw.ElapsedMilliseconds);
+            Console.WriteLine("> Request was completed for {1} ms", context.Request.RemoteEndPoint.Address, sw.ElapsedMilliseconds);
         }
 
         #endregion request

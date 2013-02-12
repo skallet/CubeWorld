@@ -114,7 +114,7 @@ namespace CubeWorldTrees.Trees.QuadTree
         {
             if (m_parts == null || key < 0 || key > m_bounds.width * m_bounds.width)
                 return 0;
-
+            
             return m_parts[key];
         }
 

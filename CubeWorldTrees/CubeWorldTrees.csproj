@@ -30,7 +30,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
@@ -60,7 +60,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\BaseController.cs" />
+    <Compile Include="Controllers\ErrorController.cs" />
+    <Compile Include="Controllers\JsonController.cs" />
+    <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="Controllers\MapController.cs" />
+    <Compile Include="Controllers\UserController.cs" />
     <Compile Include="Map\Block.cs" />
     <Compile Include="Map\IBlock.cs" />
     <Compile Include="Map\MapGenerator.cs" />
@@ -69,6 +73,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Server\Client.cs" />
     <Compile Include="Server\Server.cs" />
+    <Compile Include="Server\Session.cs" />
     <Compile Include="Trees\BaseTree.cs" />
     <Compile Include="Trees\BPlusTree.cs" />
     <Compile Include="Trees\BTree.cs" />
