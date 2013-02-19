@@ -50,8 +50,8 @@ namespace CubeWorldTrees.Trees.QuadTree
                     for (int y = 0; y < width; y++)
                     {
                         pointer = x * width + y;
-                        space[x, y] = rand.Next(1, 3);
-                        //space[x, y] = node.GetPart(pointer);
+                        //space[x, y] = rand.Next(1, 3);
+                        space[x, y] = node.GetPart(pointer);
                     }
                 }
 

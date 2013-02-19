@@ -59,12 +59,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controllers\BaseController.cs" />
-    <Compile Include="Controllers\ErrorController.cs" />
-    <Compile Include="Controllers\JsonController.cs" />
-    <Compile Include="Controllers\LoginController.cs" />
-    <Compile Include="Controllers\MapController.cs" />
-    <Compile Include="Controllers\UserController.cs" />
+    <Compile Include="Controlers\BaseControler.cs" />
+    <Compile Include="Controlers\ErrorControler.cs" />
+    <Compile Include="Controlers\JsonControler.cs" />
+    <Compile Include="Controlers\LoginControler.cs" />
+    <Compile Include="Controlers\MapControler.cs" />
+    <Compile Include="Controlers\UserControler.cs" />
     <Compile Include="Map\Block.cs" />
     <Compile Include="Map\IBlock.cs" />
     <Compile Include="Map\MapGenerator.cs" />
@@ -74,6 +74,7 @@
     <Compile Include="Server\Client.cs" />
     <Compile Include="Server\Server.cs" />
     <Compile Include="Server\Session.cs" />
+    <Compile Include="Templates\Template.cs" />
     <Compile Include="Trees\BaseTree.cs" />
     <Compile Include="Trees\BPlusTree.cs" />
     <Compile Include="Trees\BTree.cs" />
@@ -107,7 +108,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models\" />
-    <Folder Include="Templates\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

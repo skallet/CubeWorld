@@ -5,16 +5,16 @@ using System.Text;
 using System.Net;
 using CubeWorldTrees.Server;
 
-namespace CubeWorldTrees.Controllers
+namespace CubeWorldTrees.Controlers
 {
-    class UserController
+    class UserControler
     {
 
         protected Session session;
 
         protected HttpListenerContext context;
 
-        public UserController(HttpListenerContext Context)
+        public UserControler(HttpListenerContext Context)
         {
             context = Context;
 
@@ -39,8 +39,7 @@ namespace CubeWorldTrees.Controllers
             {
                 session.set("user", "Anonymous");
             }
-
-            context.Response.Headers.Add("Set-Cookie", "sessid=" + sid + ";Path=/;Expires=" + session.getExpiration().ToString("ddd, dd-MMM-yyyy H:mm:ss") + " GMT");
+            context.Response.Headers.Add("Set-Cookie", "sessid=" + sid + ";Path=/;Expires=" + session.getExpiration().ToString("dd-MMM-yyyy H:mm:ss") + " GMT");
         }
 
         public bool isLoggedIn()
@@ -53,7 +52,7 @@ namespace CubeWorldTrees.Controllers
             if (this.isLoggedIn())
             {
                 session.unset();
-                context.Response.Headers.Add("Set-Cookie", "sessid=" + 0 + ";Path=/;Expires=" + DateTime.Now.ToString("ddd, dd-MMM-yyyy H:mm:ss") + " GMT");
+                context.Response.Headers.Add("Set-Cookie", "sessid=" + 0 + ";Path=/;Expires=" + DateTime.Now.ToString("dd-MMM-yyyy H:mm:ss") + " GMT");
             }
         }
 
@@ -61,7 +60,7 @@ namespace CubeWorldTrees.Controllers
         {
             if (password.Equals("test"))
             {
-                session.set("user", "Registred");
+                session.set("user", "Registred", true);
                 session.set("username", username);
             }
         }

@@ -100,22 +100,22 @@ namespace CubeWorldTrees.Server
             }
             else
             {
-                Controllers.BaseController controler = null;
+                Controlers.BaseControler controler = null;
                 string absolutePath = url.AbsolutePath;
 
                 switch (absolutePath)
                 {
                     case "/":
-                        controler = new Controllers.MapController(context, server.quadTree);
+                        controler = new Controlers.MapControler(context, server.quadTree);
                         break;
                     case "/initialize":
-                        controler = new Controllers.JsonController(context, server.quadTree);
+                        controler = new Controlers.JsonControler(context, server.quadTree);
                         break;
                     case "/login":
-                        controler = new Controllers.LoginController(context);
+                        controler = new Controlers.LoginControler(context);
                         break;
                     default:
-                        controler = new Controllers.ErrorController(context);
+                        controler = new Controlers.ErrorControler(context);
                         break;
                 }
 

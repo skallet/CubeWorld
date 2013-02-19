@@ -5,18 +5,23 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Net;
 
-namespace CubeWorldTrees.Controllers
+namespace CubeWorldTrees.Controlers
 {
-    class LoginController : BaseController
+    class LoginControler : BaseControler
     {
 
         protected System.Collections.Hashtable loginForm = new System.Collections.Hashtable();
 
         protected List<string> loginFormErrors = new List<string>();
 
-        public LoginController(HttpListenerContext Context)
+        public LoginControler(HttpListenerContext Context)
             : base(Context)
         {
+        }
+
+        public override void  Action()
+        {
+ 	        base.Action();
             loginForm["send"] = false;
 
             if (context.Request.HasEntityBody)
@@ -37,8 +42,9 @@ namespace CubeWorldTrees.Controllers
                             Match match = formMatch.Match(value);
                             if (match.Success)
                             {
-                                Console.WriteLine("{0}: {1}", match.Groups[1].Value, match.Groups[2].Value);
-                                loginForm[match.Groups[1].Value] = match.Groups[2].Value;
+                                //Console.WriteLine("{0}: {1}", match.Groups[1].Value, match.Groups[2].Value);
+                                if (match.Groups[2].Value != "")
+                                    loginForm[match.Groups[1].Value] = match.Groups[2].Value;
                             }
                         }
                     }
@@ -47,9 +53,19 @@ namespace CubeWorldTrees.Controllers
 
             if ((bool)loginForm["send"] == true)
             {
+                if (loginForm.Contains("username"))
+                {
+                    template.setParameter("loginName", loginForm["username"].ToString());
+                }
+
                 if (loginForm.Contains("username") && loginForm.Contains("password"))
                 {
                     user.login(loginForm["username"].ToString(), loginForm["password"].ToString());
+
+                    if (!user.isLoggedIn())
+                    {
+                        loginFormErrors.Add("Invalid username or password!");
+                    }
                 }
                 else
                 {
@@ -59,51 +75,21 @@ namespace CubeWorldTrees.Controllers
 
             if (user.isLoggedIn())
             {
-                context.Response.Redirect("http://" + context.Request.Url.Host + ":" + context.Request.Url.Port + "/");
-                context.Response.StatusCode = 302;
-                context.Response.OutputStream.Close();
+                Redirect("http://" + context.Request.Url.Host + ":" + context.Request.Url.Port + "/");
                 return;
             }
 
-            StringBuilder sb = new StringBuilder();
-            sb.Append("<html>");
-            sb.Append("<head>");
-            sb.Append("</head>");
-
-            sb.Append("<body>");
-            sb.Append("<h1>Login</h1>");
-
+            string errors = "";
             if (loginFormErrors.Count > 0)
             {
-                sb.Append("<ul class='errors'>");
+                errors += "<ul class='errors'>\n";
                 foreach (string error in loginFormErrors)
                 {
-                    sb.Append("<li>" + error + "</li>");
+                    errors += "<li>" + error + "</li>\n";
                 }
-                sb.Append("</ul>");
+                errors += "</ul>\n";
             }
-
-            sb.Append("<form method='post' action='?do=loginForm-send'>");
-            sb.Append(" <label for='username'>Username:</label>");
-            sb.Append(" <input type='text' name='username' value='" + loginForm["username"] + "' />");
-            sb.Append(" <br />");
-            sb.Append(" <label for='password'>Password:</label>");
-            sb.Append(" <input type='password' name='password' />");
-            sb.Append(" <br />");
-            sb.Append(" <input type='submit' value='Login' />");
-            sb.Append("</form>");
-            sb.Append("</body>");
-            sb.Append("</html>");
-
-            byte[] b = Encoding.UTF8.GetBytes(sb.ToString());
-            context.Response.ContentLength64 = b.Length;
-
-            try
-            {
-                context.Response.OutputStream.Write(b, 0, b.Length);
-                context.Response.OutputStream.Close();
-            }
-            catch { }
+            template.setParameter("errors", errors);
         }
 
     }

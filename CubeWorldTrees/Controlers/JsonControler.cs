@@ -4,21 +4,27 @@ using System.Linq;
 using System.Text;
 using System.Net;
 
-namespace CubeWorldTrees.Controllers
+namespace CubeWorldTrees.Controlers
 {
-    class JsonController : BaseController
+    class JsonControler : BaseControler
     {
 
         protected Trees.QuadTree.QuadTree<Map.Block> quadTree;
 
-        public JsonController(HttpListenerContext Context, Trees.QuadTree.QuadTree<Map.Block> QuadTree)
+        public JsonControler(HttpListenerContext Context, Trees.QuadTree.QuadTree<Map.Block> QuadTree)
             : base(Context)
         {
             quadTree = QuadTree;
+            renderTemplate = false;
         }
 
         public override void Render()
         {
+            base.Render();
+
+            if (!user.isLoggedIn())
+                return;
+
             StringBuilder sb = new StringBuilder();
 
             sb.Append("{");
@@ -44,16 +50,7 @@ namespace CubeWorldTrees.Controllers
             }
             sb.Append("}");
 
-            context.Response.ContentType = "application/json";
-            byte[] b = Encoding.UTF8.GetBytes(sb.ToString());
-            context.Response.ContentLength64 = b.Length;
-
-            try
-            {
-                context.Response.OutputStream.Write(b, 0, b.Length);
-                context.Response.OutputStream.Close();
-            }
-            catch { }
+            sendJsonResponse(sb.ToString());
         }
 
     }

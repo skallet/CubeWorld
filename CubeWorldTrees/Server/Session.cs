@@ -44,7 +44,6 @@ namespace CubeWorldTrees.Server
 
         ~Session()
         {
-            System.Diagnostics.Trace.WriteLine("adsf");
             updateData();
         }
 
