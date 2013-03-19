@@ -40,7 +40,7 @@ namespace CubeWorldTrees.Server
             sw.Start();
 
             Uri url = context.Request.Url;
-            string regex = @"^(/[a-zA-Z0-9]*)*[.](png|jpg|js|css)$";
+            string regex = @"^(/[a-zA-Z0-9]*)*[.](png|jpg|js|css|ico)$";
             Regex fileRegex = new Regex(regex);
 
             //image requested
@@ -77,12 +77,15 @@ namespace CubeWorldTrees.Server
                             context.Response.ContentType = "image/jpg";
                             break;
                         case "js":
-                            //Console.WriteLine("> Request javascript!");
+                            Console.WriteLine("> Request javascript!");
                             context.Response.ContentType = "application/javascript";
                             break;
                         case "css":
                             //Console.WriteLine("> Request css!");
                             context.Response.ContentType = "text/css";
+                            break;
+                        case "ico":
+                            context.Response.ContentType = "image/x-icon";
                             break;
                     }
 
@@ -102,6 +105,7 @@ namespace CubeWorldTrees.Server
             {
                 Controlers.BaseControler controler = null;
                 string absolutePath = url.AbsolutePath;
+                Console.WriteLine("Request path: {0}", absolutePath);
 
                 switch (absolutePath)
                 {

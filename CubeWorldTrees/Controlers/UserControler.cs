@@ -19,7 +19,8 @@ namespace CubeWorldTrees.Controlers
             context = Context;
 
             Cookie sessid = context.Request.Cookies["sessid"];
-            string sid = (sessid != null) ? sessid.Value.ToString() : "";
+            string sid = (sessid != null && !sessid.Expired) ? sessid.Value.ToString() : "";
+            Console.WriteLine("Try to connect with {0} session.", sid);
 
             if (sid.Length == 0 || sid.Equals("0"))
             {
@@ -39,7 +40,10 @@ namespace CubeWorldTrees.Controlers
             {
                 session.set("user", "Anonymous");
             }
-            context.Response.Headers.Add("Set-Cookie", "sessid=" + sid + ";Path=/;Expires=" + session.getExpiration().ToString("dd-MMM-yyyy H:mm:ss") + " GMT");
+            Console.WriteLine("Creating session {0}", sid);
+            Cookie cookie = new Cookie("sessid", sid);
+            cookie.Expires = session.getExpiration();
+            context.Response.Cookies.Add(cookie);
         }
 
         public bool isLoggedIn()
@@ -52,7 +56,9 @@ namespace CubeWorldTrees.Controlers
             if (this.isLoggedIn())
             {
                 session.unset();
-                context.Response.Headers.Add("Set-Cookie", "sessid=" + 0 + ";Path=/;Expires=" + DateTime.Now.ToString("dd-MMM-yyyy H:mm:ss") + " GMT");
+                Cookie cookie = new Cookie("sessid", "0");
+                cookie.Expires = DateTime.Now;
+                context.Response.Cookies.Add(cookie);
             }
         }
 
@@ -62,6 +68,7 @@ namespace CubeWorldTrees.Controlers
             {
                 session.set("user", "Registred", true);
                 session.set("username", username);
+                session.forceValidFile();
             }
         }
 

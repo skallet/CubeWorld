@@ -1,0 +1,1 @@
+<h1>Chyba! Stránka nenalezena</h1>
