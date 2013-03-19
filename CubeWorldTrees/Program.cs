@@ -124,11 +124,212 @@ namespace CubeWorldTrees
             Console.ReadKey();
         }
 
+        public static void treeTest(int width)
+        {
+            
+            Map.Rectangle space = new Map.Rectangle(0, 0, width);
+            Map.Rectangle location;
+            Map.Block block;
+
+            Map.Rectangle partZero;
+            Map.Rectangle dot = new Map.Rectangle(0, 0, 1);
+            int[,] parts;
+            long init, insert, readOne, readSpace, completed;
+
+            Console.WriteLine("Tree test 1: {0}", width);
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
+            Trees.QuadTree.QuadTree<Map.Block> tree = new Trees.QuadTree.QuadTree<Map.Block>(space);
+
+            sw.Stop();
+            init = sw.ElapsedMilliseconds;
+            sw.Start();
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < width; y++)
+                {
+                    location = new Map.Rectangle(x, y, 1);
+                    block = new Map.Block(0, location);
+                    tree.Insert(block);
+                }
+            }
+
+            sw.Stop();
+            insert = sw.ElapsedMilliseconds;
+            sw.Start();
+
+            location = new Map.Rectangle(10, 10, 1);
+            tree.Get(location);
+
+            sw.Stop();
+            readOne = sw.ElapsedMilliseconds;
+            sw.Start();
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < width; y++)
+                {
+                    location = new Map.Rectangle(x, y, 1);
+                    block = tree.Get(location);
+                }
+            }
+
+            sw.Stop();
+            readSpace = sw.ElapsedMilliseconds;
+            sw.Start();
+
+            parts = tree.GetSpace(dot, 4, out partZero);
+
+
+            sw.Stop();
+            completed = sw.ElapsedMilliseconds;
+            sw.Start();
+
+            System.IO.StreamWriter file = System.IO.File.CreateText(@"C:\Users\Milan\Dokumenty\BI-BP\tests\test1-" + width + ".txt");
+            file.WriteLine("== Test completed for {0}-width space", width);
+            file.WriteLine("= Part 1. Initializing: {0}", init);
+            file.WriteLine("= Part 2. Full inserting: {0}", insert - init);
+            file.WriteLine("= Part 3. Reading one element: {0}", readOne - insert);
+            file.WriteLine("= Part 3. Reading space (16x16): {0}", readSpace - readOne);
+            file.WriteLine("= Part 3. Full reading: {0}", completed - readSpace);
+            file.WriteLine("== Overall: {0}", completed);
+            file.WriteLine("");
+            file.Close();
+        }
+
+        public static void treeTest2(int width)
+        {
+
+            Map.Rectangle space = new Map.Rectangle(0, 0, width);
+            Map.Rectangle location;
+            Map.Block block;
+
+            Map.Rectangle partZero;
+            Map.Rectangle dot = new Map.Rectangle(0, 0, 1);
+            int[,] parts;
+            int worldx, worldy;
+            long init, insert, readOne, readSpace, completed;
+            Trees.QuadTree.QuadTree<Map.Block> part;
+
+            Console.WriteLine("Tree test 2: {0}", width);
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
+            Trees.QuadTree.QuadTree<Map.Block> world = new Trees.QuadTree.QuadTree<Map.Block>(space);
+
+            sw.Stop();
+            init = sw.ElapsedMilliseconds;
+            sw.Start();
+
+            worldx = 10;
+            worldy = 10;
+
+            part = new Trees.QuadTree.QuadTree<Map.Block>(space);
+            location = new Map.Rectangle(worldx, worldy, 1);
+            block = new Map.Block(0, location);
+            block.tree = part;
+            world.Insert(block);
+            part = world.Get(location).tree;
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < width; y++)
+                {
+                    location = new Map.Rectangle(x, y, 1);
+                    block = new Map.Block(x + y, location);
+                    part.Insert(block);
+                }
+            }
+
+            sw.Stop();
+            insert = sw.ElapsedMilliseconds;
+            sw.Start();
+
+            worldx = 15;
+            worldy = 15;
+
+            part = new Trees.QuadTree.QuadTree<Map.Block>(space);
+            location = new Map.Rectangle(worldx, worldy, 1);
+            block = new Map.Block(0, location);
+            block.tree = part;
+            world.Insert(block);
+            part = world.Get(location).tree;
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < width; y++)
+                {
+                    location = new Map.Rectangle(x, y, 1);
+                    block = new Map.Block(x + y, location);
+                    part.Insert(block);
+                }
+            }
+
+            location = new Map.Rectangle(worldx, worldy, 1);
+            part = world.Get(location).tree;
+
+            sw.Stop();
+            readOne = sw.ElapsedMilliseconds;
+            sw.Start();
+
+            worldx = 15;
+            worldy = 15;
+
+            location = new Map.Rectangle(worldx, worldy, 1);
+
+            part = world.Get(location).tree;
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < width; y++)
+                {
+                    location = new Map.Rectangle(x, y, 1);
+                    block = part.Get(location);
+                }
+            }
+
+            sw.Stop();
+            readSpace = sw.ElapsedMilliseconds;
+            sw.Start();
+
+            location = new Map.Rectangle(10, 10, 1);
+            part = world.Get(location).tree;
+            parts = part.GetSpace(dot, 4, out partZero);
+
+
+            sw.Stop();
+            completed = sw.ElapsedMilliseconds;
+            sw.Start();
+
+            System.IO.StreamWriter file = System.IO.File.CreateText(@"C:\Users\Milan\Dokumenty\BI-BP\tests\test2-" + width + ".txt");
+            file.WriteLine("== Test completed for {0}-width space (total: {0} blocks width)", width, Math.Pow(2, (double)width));
+            file.WriteLine("= Part 1. Initializing: {0}", init);
+            file.WriteLine("= Part 2. Creating new world part: {0}", insert - init);
+            file.WriteLine("= Part 3. Reading new element: {0}", readOne - insert);
+            file.WriteLine("= Part 3. Reading existing element: {0}", readSpace - readOne);
+            file.WriteLine("= Part 3. Reading space (16x16) in existing element: {0}", completed - readSpace);
+            file.WriteLine("== Overall: {0}", completed);
+            file.WriteLine("");
+            file.Close();
+        }
+
         static int Main(string[] args)
         {
-            Server.Server server = new Server.Server();
+            //Server.Server server = new Server.Server();
+            double width = 0;
+            for (int i = 4; i < 12; i++)
+            {
+                width = Math.Pow((double)2, (double)i);
 
-            return 0; ;
+                Program.treeTest((int)width);
+                Program.treeTest2((int)width);
+            }
+
+            Console.WriteLine("press key to exit");
+            Console.ReadKey();
+            return 0;
         }
     }
 }

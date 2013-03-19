@@ -10,11 +10,11 @@ namespace CubeWorldTrees.Trees.QuadTree
 
         private Map.Rectangle m_bounds;
 
-        public QuadTreeNode(Map.Rectangle Bounds)
+        public QuadTreeNode(Map.Rectangle Bounds, bool partitioning = true)
         {
             m_bounds = Bounds;
 
-            if (m_bounds.width <= 10 && m_bounds.width >= 2)
+            if (m_bounds.width <= 10 && m_bounds.width >= 2 && partitioning)
                 m_parts = new int[m_bounds.width * m_bounds.width];
         }
 

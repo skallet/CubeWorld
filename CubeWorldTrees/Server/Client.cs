@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Net;
 using System.Diagnostics;
+using System.Web;
 
 namespace CubeWorldTrees.Server
 {
@@ -36,6 +37,8 @@ namespace CubeWorldTrees.Server
         public void processRequest()
         {
             Console.WriteLine("> Client access from {0}", context.Request.RemoteEndPoint.Address);
+            Console.WriteLine(context.Request.Headers.ToString());
+
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
@@ -69,19 +72,15 @@ namespace CubeWorldTrees.Server
                     switch (match.Groups[2].Value)
                     {
                         case "png":
-                            Console.WriteLine("> Request png!");
                             context.Response.ContentType = "image/png";
                             break;
                         case "jpg":
-                            Console.WriteLine("> Request jpg!");
                             context.Response.ContentType = "image/jpg";
                             break;
                         case "js":
-                            Console.WriteLine("> Request javascript!");
                             context.Response.ContentType = "application/javascript";
                             break;
                         case "css":
-                            Console.WriteLine("> Request css!");
                             context.Response.ContentType = "text/css";
                             break;
                     }
@@ -106,12 +105,10 @@ namespace CubeWorldTrees.Server
                     Controllers.MapController controler = new Controllers.MapController(context, server.quadTree);
                     controler.JSONTest();
                 }
+
+                sw.Stop();
+                Console.WriteLine("> Map block requested from {0} was completed for {1} ms", context.Request.RemoteEndPoint.Address, sw.ElapsedMilliseconds);
             }
-
-            
-
-            sw.Stop();
-            Console.WriteLine("> Request from {0} was completed for {1} ms", context.Request.RemoteEndPoint.Address, sw.ElapsedMilliseconds);
         }
 
         #endregion request
