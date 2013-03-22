@@ -14,7 +14,7 @@ namespace CubeWorldTrees.Trees.QuadTree
         {
             m_bounds = Bounds;
 
-            if (m_bounds.width <= 10 && m_bounds.width >= 2 && partitioning)
+            if (m_bounds.width >= 2 && partitioning)
                 m_parts = new int[m_bounds.width * m_bounds.width];
         }
 
@@ -114,7 +114,7 @@ namespace CubeWorldTrees.Trees.QuadTree
         {
             if (m_parts == null || key < 0 || key > m_bounds.width * m_bounds.width)
                 return 0;
-
+            
             return m_parts[key];
         }
 

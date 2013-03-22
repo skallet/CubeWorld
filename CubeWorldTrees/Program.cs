@@ -22,7 +22,6 @@ namespace CubeWorldTrees
             generator.Generate();
             Console.WriteLine("Map generated!");
 
-
             Map.Rectangle space = new Map.Rectangle(0, 0, width);
             Map.Block block;
             Map.Rectangle dot = new Map.Rectangle(0, 0, 1);
@@ -315,8 +314,52 @@ namespace CubeWorldTrees
             file.Close();
         }
 
+        public static void testSession()
+        {
+            Server.Session session = new Server.Session("test");
+            session.dump();
+
+            Console.WriteLine("Getting name: " + session.get("name"));
+
+            session.set("name", "Test");
+            session.dump();
+
+            session.unset();
+            session.dump();
+        }
+
+        public static void WorldTest(int tyles = 256)
+        {
+            Map.Map map = new Map.Map(tyles);
+
+            Map.Rectangle coord = new Map.Rectangle(0, 0, 1);
+            Map.Block block;
+            Trees.QuadTree.QuadTree<Map.Block> tree;
+            /*
+            for (int i = 0; i < 10; i++)
+            {
+                coord.x = tyles * i;
+                block = map.getBlock(coord);
+                Console.WriteLine("Block X: {0}, Y: {1}, Value: {2}.", block.location.x, block.location.y, block.val);
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                coord.x = i;
+                tree = map.getTree(coord);
+            }*/
+
+            coord.x = 15;
+            coord.y = 0;
+            coord.width = 25;
+            List<Map.Block> list = map.getIntersect(coord);
+            Console.WriteLine("Retriev {0} map parts", list.Count);
+            
+        }
+
         static int Main(string[] args)
         {
+            /* TESTY
             //Server.Server server = new Server.Server();
             double width = 0;
             for (int i = 4; i < 12; i++)
@@ -329,6 +372,14 @@ namespace CubeWorldTrees
 
             Console.WriteLine("press key to exit");
             Console.ReadKey();
+             */
+
+            /* World testy + implementace
+            Program.WorldTest();
+            Console.ReadKey();
+             */
+            
+            Server.Server server = new Server.Server();
             return 0;
         }
     }

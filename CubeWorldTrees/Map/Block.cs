@@ -14,7 +14,7 @@ namespace CubeWorldTrees.Map
 
         private Rectangle _location;
 
-        private Trees.QuadTree.QuadTree<Map.Block> _tree;
+        private Trees.QuadTree.QuadTree<Block> _tree;
 
         #endregion Parameters
 
@@ -33,7 +33,7 @@ namespace CubeWorldTrees.Map
             set { _location = value; }
         }
 
-        public Trees.QuadTree.QuadTree<Map.Block> tree
+        public Trees.QuadTree.QuadTree<Block> tree
         {
             get { return _tree; }
             set { _tree = value; }

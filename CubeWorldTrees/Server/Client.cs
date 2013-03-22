@@ -37,17 +37,17 @@ namespace CubeWorldTrees.Server
         public void processRequest()
         {
             Console.WriteLine("> Client access from {0}", context.Request.RemoteEndPoint.Address);
-            Console.WriteLine(context.Request.Headers.ToString());
+            //Console.WriteLine(context.Request.Headers.ToString());
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
             Uri url = context.Request.Url;
-            string regex = @"^(/[a-zA-Z0-9]*)*[.](png|jpg|js|css)$";
-            Regex imgRegex = new Regex(regex);
+            string regex = @"^(/[a-zA-Z0-9]*)*[.](png|jpg|js|css|ico)$";
+            Regex fileRegex = new Regex(regex);
 
             //image requested
-            if (imgRegex.IsMatch(url.AbsolutePath))
+            if (fileRegex.IsMatch(url.AbsolutePath))
             {
                 string imgFile = "." + url.AbsolutePath;
 
@@ -67,48 +67,72 @@ namespace CubeWorldTrees.Server
                     br.Close();
                     fStream.Close();
 
-                    Match match = imgRegex.Match(url.AbsolutePath);  
+                    Match match = fileRegex.Match(url.AbsolutePath);  
 
                     switch (match.Groups[2].Value)
                     {
                         case "png":
+                            //Console.WriteLine("> Request png!");
                             context.Response.ContentType = "image/png";
                             break;
                         case "jpg":
+                            //Console.WriteLine("> Request jpg!");
                             context.Response.ContentType = "image/jpg";
                             break;
                         case "js":
                             context.Response.ContentType = "application/javascript";
                             break;
                         case "css":
+                            //Console.WriteLine("> Request css!");
                             context.Response.ContentType = "text/css";
+                            break;
+                        case "ico":
+                            context.Response.ContentType = "image/x-icon";
                             break;
                     }
 
                     context.Response.ContentLength64 = bOutput.Length;
 
                     Stream OutputStream = context.Response.OutputStream;
-                    OutputStream.Write(bOutput, 0, bOutput.Length);
-                    OutputStream.Close();
+
+                    try
+                    {
+                        OutputStream.Write(bOutput, 0, bOutput.Length);
+                        OutputStream.Close();
+                    }
+                    catch { }
                 }
             }
             else
             {
-                if (url.AbsolutePath.Equals("/"))
+                Controlers.BaseControler controler = null;
+                string absolutePath = url.AbsolutePath;
+                //Console.WriteLine("Request path: {0}", absolutePath);
+
+                switch (absolutePath)
                 {
-                    Controllers.MapController controler = new Controllers.MapController(context, server.quadTree);
-                    controler.Render();
-                }
-                else if (url.AbsolutePath.Equals("/initialize"))
-                {
-                    //TODO: find Controller
-                    Controllers.MapController controler = new Controllers.MapController(context, server.quadTree);
-                    controler.JSONTest();
+                    case "/":
+                        controler = new Controlers.MapControler(context);
+                        break;
+                    case "/initialize":
+                    case "/position":
+                        controler = new Controlers.JsonControler(context, server.world);
+                        break;
+                    case "/login":
+                        controler = new Controlers.LoginControler(context);
+                        break;
+                    default:
+                        controler = new Controlers.ErrorControler(context);
+                        break;
                 }
 
-                sw.Stop();
-                Console.WriteLine("> Map block requested from {0} was completed for {1} ms", context.Request.RemoteEndPoint.Address, sw.ElapsedMilliseconds);
+                controler.Run();
             }
+
+            
+
+            sw.Stop();
+            Console.WriteLine("> Request was completed for {1} ms", context.Request.RemoteEndPoint.Address, sw.ElapsedMilliseconds);
         }
 
         #endregion request

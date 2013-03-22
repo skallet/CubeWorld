@@ -8,7 +8,7 @@ namespace CubeWorldTrees.Map
     interface IBlock
     {
 
-        Trees.QuadTree.QuadTree<Map.Block> tree
+        Trees.QuadTree.QuadTree<Block> tree
         {
             get;
             set;
