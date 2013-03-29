@@ -24,7 +24,8 @@ namespace CubeWorldTrees.Controlers
         public BaseControler(HttpListenerContext Context)
         {
             context = Context;
-            user = new Controlers.UserControler(context);
+            Models.UserModel usersModel = new Models.UserModel(Server.Server.connection);
+            user = new Controlers.UserControler(context, usersModel);
         }
 
         public void Redirect(string url)

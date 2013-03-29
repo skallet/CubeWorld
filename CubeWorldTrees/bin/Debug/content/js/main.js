@@ -95,6 +95,10 @@ $(document).ready(function () {
         		var needToUpdate = false;
 				$.each(data, function( index ) {
 					if (index == "position") {
+            if (positionX != this.x || positionY != this.y) {
+              needToUpdate = true;
+            }
+            
 						positionX = this.x;
 						positionY = this.y;
 					} else {
@@ -137,6 +141,8 @@ $(document).ready(function () {
 							matrix[index] = new Object();
 							matrix[index].x = this.x;
 							matrix[index].y = this.y;
+              
+              needToUpdate = true;
 						}
 						
 						matrix[index].src = match;	
@@ -144,11 +150,11 @@ $(document).ready(function () {
 			    });
 			    
 			    for (var i = 0; i < matrix.length; i ++) {
-					if (matrix[i].x < (playerX - 8) || matrix[i].x > (playerX + 8)) {
-						if (matrix[i].y < (playerY - 8) || matrix[i].y > (playerY + 8)) {
-							delete matrix[i];
-						}	
-					}
+  					if (matrix[i].x < (playerX - 8) || matrix[i].x > (playerX + 8)) {
+  						if (matrix[i].y < (playerY - 8) || matrix[i].y > (playerY + 8)) {
+  							delete matrix[i];
+  						}	
+  					}
 			    }
 			    
 			    if (needToUpdate)

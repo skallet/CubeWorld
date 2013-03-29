@@ -357,6 +357,26 @@ namespace CubeWorldTrees
             
         }
 
+        public static void WorldSizeTest(int tyles = 256, int trees = 10)
+        {
+            Map.Rectangle coord = new Map.Rectangle(0, 0, 1);
+            Map.Block block;
+
+            //long GC_MemStart = System.GC.GetTotalMemory(true);
+
+            Map.Map map = new Map.Map(tyles);
+
+            for (int i = 0; i < trees; i++)
+            {
+                coord.x = tyles * i;
+                block = map.getBlock(coord);
+            }
+
+            //long GC_MemEnd = System.GC.GetTotalMemory(true);
+
+            //Console.WriteLine("Size test for {0} trees took {1}mb", trees, (GC_MemEnd - GC_MemStart) / 8000000);
+        }
+
         static int Main(string[] args)
         {
             /* TESTY
@@ -378,8 +398,19 @@ namespace CubeWorldTrees
             Program.WorldTest();
             Console.ReadKey();
              */
+
+            /* World size testy */
+            for (int i = 1; i < 2; i ++)
+            {
+                Program.WorldSizeTest(256, 10 * i);
+                Console.WriteLine("Finish {0}", i * 10);
+                //Console.ReadKey();
+            }
+
+            Console.WriteLine("Finish all");
             
-            Server.Server server = new Server.Server();
+            
+            //Server.Server server = new Server.Server();
             return 0;
         }
     }

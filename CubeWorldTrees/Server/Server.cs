@@ -4,12 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using System.Threading;
+using MySql.Data.MySqlClient;
 
 namespace CubeWorldTrees.Server
 {
     class Server
     {
         #region parameters
+
+        public static MySqlConnection connection;
+
+        public Models.UserModel users;
 
         public static HttpListener listener = new HttpListener();
         public Map.Map world;
@@ -25,6 +30,8 @@ namespace CubeWorldTrees.Server
 
             listener.Prefixes.Add("http://*:40000/");
             listener.Start();
+
+            Server.connection = new MySqlConnection("Database=cubeworld;DataSource=localhost;UserId=root;Password=root");
 
             Console.WriteLine("> Starting server ...");
 

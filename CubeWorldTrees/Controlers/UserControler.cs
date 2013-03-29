@@ -14,9 +14,12 @@ namespace CubeWorldTrees.Controlers
 
         protected HttpListenerContext context;
 
-        public UserControler(HttpListenerContext Context)
+        protected Models.UserModel model;
+
+        public UserControler(HttpListenerContext Context, Models.UserModel Model)
         {
             context = Context;
+            model = Model;
 
             Cookie sessid = context.Request.Cookies["sessid"];
             string sid = (sessid != null && !sessid.Expired) ? sessid.Value.ToString() : "";
@@ -64,10 +67,12 @@ namespace CubeWorldTrees.Controlers
 
         public void login(string username, string password)
         {
-            if (password.Equals("test"))
+            System.Collections.Hashtable userData = model.login(username, password);
+
+            if (userData != null)
             {
                 session.set("user", "Registred", true);
-                session.set("username", username);
+                session.set("username", userData["username"].ToString());
                 session.forceValidFile();
             }
         }
