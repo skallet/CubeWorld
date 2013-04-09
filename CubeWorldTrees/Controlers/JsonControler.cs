@@ -32,7 +32,7 @@ namespace CubeWorldTrees.Controlers
             sb.Append("{");
             if (absolutePath == "/initialize")
             {
-                int window = 6;
+                int window = 8;
                 Map.Rectangle position = user.getPosition();
                 Map.Rectangle space = new Map.Rectangle(position.x - window, position.y - window, 2 * window);
                 List<Map.Block> parts = world.getIntersect(space);

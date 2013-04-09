@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Net;
 using System.Web;
+using MySql.Data.MySqlClient;
 
 namespace CubeWorldTrees
 {
@@ -28,7 +29,7 @@ namespace CubeWorldTrees
 
             Console.WriteLine("QuadTree - initialize & saving map data");
             sw.Start();
-            Trees.QuadTree.QuadTree<Map.Block> quadTree = new Trees.QuadTree.QuadTree<Map.Block>(space);
+            Trees.QuadTree.QuadTree<Map.Block> quadTree = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(space);
             {
                 for (int x = 0; x < width; x++)
                 {
@@ -139,7 +140,7 @@ namespace CubeWorldTrees
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            Trees.QuadTree.QuadTree<Map.Block> tree = new Trees.QuadTree.QuadTree<Map.Block>(space);
+            Trees.QuadTree.QuadTree<Map.Block> tree = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(space);
 
             sw.Stop();
             init = sw.ElapsedMilliseconds;
@@ -216,7 +217,7 @@ namespace CubeWorldTrees
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            Trees.QuadTree.QuadTree<Map.Block> world = new Trees.QuadTree.QuadTree<Map.Block>(space);
+            Trees.QuadTree.QuadTree<Map.Block> world = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(space);
 
             sw.Stop();
             init = sw.ElapsedMilliseconds;
@@ -225,7 +226,7 @@ namespace CubeWorldTrees
             worldx = 10;
             worldy = 10;
 
-            part = new Trees.QuadTree.QuadTree<Map.Block>(space);
+            part = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(space);
             location = new Map.Rectangle(worldx, worldy, 1);
             block = new Map.Block(0, location);
             block.tree = part;
@@ -249,7 +250,7 @@ namespace CubeWorldTrees
             worldx = 15;
             worldy = 15;
 
-            part = new Trees.QuadTree.QuadTree<Map.Block>(space);
+            part = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(space);
             location = new Map.Rectangle(worldx, worldy, 1);
             block = new Map.Block(0, location);
             block.tree = part;
@@ -328,33 +329,105 @@ namespace CubeWorldTrees
             session.dump();
         }
 
-        public static void WorldTest(int tyles = 256)
-        {
-            Map.Map map = new Map.Map(tyles);
+        public static int TotalInserted = 0;
 
-            Map.Rectangle coord = new Map.Rectangle(0, 0, 1);
-            Map.Block block;
+        public static Mutex mt = new Mutex(false, "console");
+
+        public static void WorldTest(int tyles = 16, int treeChaining = 2)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
+            MySqlConnection connection = new MySqlConnection("Database=cubeworld;DataSource=localhost;UserId=root;Password=root");
+            Models.TilesModel model = new Models.TilesModel(connection, tyles);
+            Map.Map map = new Map.Map(model, tyles, treeChaining);
+
+            Map.Rectangle coord = new Map.Rectangle(0, 0, 1), coords = new Map.Rectangle(0, 0, 1);
+            Map.Block blockA, blockB;
             Trees.QuadTree.QuadTree<Map.Block> tree;
+
+            int totalBlocks = (int)Math.Pow(tyles, treeChaining + 1) * (int)Math.Pow(tyles, treeChaining + 1);
+            
             /*
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 16; i++)
             {
                 coord.x = tyles * i;
                 block = map.getBlock(coord);
                 Console.WriteLine("Block X: {0}, Y: {1}, Value: {2}.", block.location.x, block.location.y, block.val);
             }
+             */
 
-            for (int i = 0; i < 10; i++)
+            int test = 0, failsTiles = 0, failsValues = 0, valuesTest = 0;
+            for (int i = 0; i < 2; i++)
             {
-                coord.x = i;
-                tree = map.getTree(coord);
-            }*/
+                for (int x = 0; x < (int)Math.Pow(tyles, treeChaining); x += tyles)
+                {
+                    for (int y = 0; y < (int)Math.Pow(tyles, treeChaining); y += tyles)
+                    {
+                        test++;
+                        //Console.WriteLine("{0}. iteration, Tree {1}, {2}", tyles * x + y, x, y);
+                        coord.x = x;
+                        coord.y = y;
 
-            coord.x = 15;
-            coord.y = 0;
-            coord.width = 25;
-            List<Map.Block> list = map.getIntersect(coord);
-            Console.WriteLine("Retriev {0} map parts", list.Count);
-            
+                        tree = map.getTree(coord);
+                        Trees.QuadTree.QuadTree<Map.Block> dbtree = model.loadTree(new Map.Rectangle(coord.x, coord.y, tyles));
+
+                        for (int ix = 0; ix < tyles; ix++)
+                        {
+                            for (int iy = 0; iy < tyles; iy++)
+                            {
+                                valuesTest++;
+                                coords.x = ix + coord.x * tyles;
+                                coords.y = iy + coord.y * tyles;
+
+                                //Console.WriteLine("Try find {0} {1} {2}", coords.x, coords.y, dbtree.DumpCount());
+
+                                blockA = tree.Get(coords);
+                                blockB = dbtree.Get(coords);
+
+                                //Console.WriteLine("Found A:{0}, B:{1}", blockA != null, blockB != null);
+
+                                if (blockA != null && blockB != null)
+                                {
+                                    if (blockA.val != blockB.val)
+                                    {
+                                        failsValues++;
+                                    }
+                                }
+                                else if (blockA == null ^ blockB == null)
+                                {
+                                    failsValues++;
+                                }
+
+                                //System.Threading.Thread.Sleep(1000);
+                            }
+                        }
+
+                        //Console.WriteLine("Test: {0} valid: {1}", tree.DumpCount(), tree.DumpCount() == tyles * tyles);
+
+                        if (tree.DumpCount() != tyles * tyles)
+                        {
+                            //Console.WriteLine("Test: {0} valid: {1}; x {2} y {3}", tree.DumpCount(), tree.DumpCount() == tyles * tyles, x, y);
+                            tree.Dump();
+                            dbtree.Dump();
+                            failsTiles += 1;
+                            //Console.ReadKey();
+                        }
+
+                        Trees.QuadTree.QuadTree<Map.Block>.unsetAllTree();
+                    }
+                }
+            }
+
+            sw.Stop();
+
+            mt.WaitOne();
+            Console.WriteLine("Očekávaný počet mapových bloků {0}.", totalBlocks);
+            Console.WriteLine("Hodnoceni počtu dlaždic: {0}% ({1} ok, {2} bad)", (100 * (test - failsTiles)) / test, test - failsTiles, failsTiles);
+            Console.WriteLine("Hodnoceni hodnot bloků : {0}% ({1} ok, {2} bad)", (100 * (valuesTest - failsValues)) / valuesTest, valuesTest - failsValues, failsValues);
+            Console.WriteLine("Celkem uloženo bloků {0}", Program.TotalInserted);
+            Console.WriteLine("Test zabral {0} s", sw.ElapsedMilliseconds / 1000);
+            mt.ReleaseMutex();
         }
 
         public static void WorldSizeTest(int tyles = 256, int trees = 10)
@@ -362,9 +435,10 @@ namespace CubeWorldTrees
             Map.Rectangle coord = new Map.Rectangle(0, 0, 1);
             Map.Block block;
 
-            //long GC_MemStart = System.GC.GetTotalMemory(true);
+            long GC_MemStart = System.GC.GetTotalMemory(true);
 
-            Map.Map map = new Map.Map(tyles);
+            MySqlConnection connection = new MySqlConnection("Database=cubeworld;DataSource=localhost;UserId=root;Password=root");
+            Map.Map map = new Map.Map(new Models.TilesModel(connection, tyles), tyles);
 
             for (int i = 0; i < trees; i++)
             {
@@ -372,9 +446,9 @@ namespace CubeWorldTrees
                 block = map.getBlock(coord);
             }
 
-            //long GC_MemEnd = System.GC.GetTotalMemory(true);
+            long GC_MemEnd = System.GC.GetTotalMemory(true);
 
-            //Console.WriteLine("Size test for {0} trees took {1}mb", trees, (GC_MemEnd - GC_MemStart) / 8000000);
+            Console.WriteLine("{0} trees, {1}mb", trees, (GC_MemEnd - GC_MemStart) / 8000000);
         }
 
         static int Main(string[] args)
@@ -395,12 +469,35 @@ namespace CubeWorldTrees
              */
 
             /* World testy + implementace
-            Program.WorldTest();
+            Program.WorldTest(16, 1);
             Console.ReadKey();
              */
 
-            /* World size testy */
-            for (int i = 1; i < 2; i ++)
+            /* MultiThreading world test
+            var numThreads = 10;
+            var countdownEvent = new CountdownEvent(numThreads);
+
+            // Start workers.
+            for (var i = 0; i < numThreads; i++)
+            {
+                new Thread(delegate()
+                {
+                    Program.WorldTest(16, 1);
+                    // Signal the CountdownEvent.
+                    countdownEvent.Signal();
+                }).Start();
+            }
+
+            // Wait for workers.
+            countdownEvent.Wait();
+            Console.WriteLine("Finished.");
+            Console.ReadKey();
+             * */
+
+
+
+            /* World size testy
+            for (int i = 10; i < 11; i ++)
             {
                 Program.WorldSizeTest(256, 10 * i);
                 Console.WriteLine("Finish {0}", i * 10);
@@ -408,9 +505,11 @@ namespace CubeWorldTrees
             }
 
             Console.WriteLine("Finish all");
+            Console.ReadKey();
+             */
             
             
-            //Server.Server server = new Server.Server();
+            Server.Server server = new Server.Server();
             return 0;
         }
     }

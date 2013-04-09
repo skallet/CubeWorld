@@ -81,7 +81,7 @@ namespace CubeWorldTrees.Map
                 {
                     location = new Rectangle(x, y, 1);
                     //_world[x, y] = new Block(x * y, location);
-                    value = rand.Next(1, 3);
+                    value = rand.Next(1, 5);
                     _world[x, y] = new Block(value, location);
                 }
             }

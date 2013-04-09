@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
+using System.Threading;
 
 namespace CubeWorldTrees.Server
 {
@@ -22,6 +23,8 @@ namespace CubeWorldTrees.Server
 
         #region parameters
 
+        protected Mutex mutex;
+
         protected string key;
 
         protected bool valid = true;
@@ -39,6 +42,7 @@ namespace CubeWorldTrees.Server
         public Session(string Key)
         {
             key = Key;
+            mutex = new Mutex(false, key);
             readData();
         }
 
@@ -78,44 +82,33 @@ namespace CubeWorldTrees.Server
                 return;
             }
 
-            Boolean readed = false;
+            mutex.WaitOne();
 
-            while (!readed)
+            StreamReader sr = new StreamReader(Session.SAVE_PATH + key + ".session");
+            string parameterRegex = @"^[\s]*([A-Za-z]*[a-zA-Z0-9\-]*)[:][\s]*(.*)";
+            Regex parameterFormat = new Regex(parameterRegex);
+            string line;
+
+            while ((line = sr.ReadLine()) != null)
             {
-                try
+                string[] parameters = line.Split(';');
+
+                foreach (string parameter in parameters)
                 {
-                    StreamReader sr = new StreamReader(Session.SAVE_PATH + key + ".session");
-                    string parameterRegex = @"^[\s]*([A-Za-z]*[a-zA-Z0-9\-]*)[:][\s]*(.*)";
-                    Regex parameterFormat = new Regex(parameterRegex);
-                    string line;
-
-                    while ((line = sr.ReadLine()) != null)
+                    if (parameterFormat.IsMatch(parameter))
                     {
-                        string[] parameters = line.Split(';');
-
-                        foreach (string parameter in parameters)
+                        Match match = parameterFormat.Match(parameter);
+                        if (match.Success)
                         {
-                            if (parameterFormat.IsMatch(parameter))
-                            {
-                                Match match = parameterFormat.Match(parameter);
-                                if (match.Success)
-                                {
-                                    data[match.Groups[1].Value] = match.Groups[2].Value;
-                                }
-                            }
+                            data[match.Groups[1].Value] = match.Groups[2].Value;
                         }
                     }
-
-                    sr.Close();
-                    readed = true;
-                }
-                catch (System.IO.IOException exception)
-                {
-                    System.Threading.Thread.Sleep(100);
                 }
             }
 
-            
+            sr.Close();
+
+            mutex.ReleaseMutex(); 
         }
 
         protected void updateData()
@@ -144,21 +137,13 @@ namespace CubeWorldTrees.Server
                     input += dkey.ToString() + ": " + data[dkey].ToString();
                 }
 
-                Boolean writen = false;
-                while (!writen)
-                {
-                    try
-                    {
-                        StreamWriter sw = new StreamWriter(Session.SAVE_PATH + key + ".session");
-                        sw.WriteLine(input);
-                        sw.Close();
-                        writen = true;
-                    }
-                    catch (System.IO.IOException exception)
-                    {
-                        System.Threading.Thread.Sleep(100);
-                    }
-                }
+                mutex.WaitOne();
+                
+                StreamWriter sw = new StreamWriter(Session.SAVE_PATH + key + ".session");
+                sw.WriteLine(input);
+                sw.Close();
+
+                mutex.ReleaseMutex();
             }
         }
 

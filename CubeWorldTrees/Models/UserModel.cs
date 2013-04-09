@@ -31,6 +31,7 @@ namespace CubeWorldTrees.Models
             cmd.CommandText = String.Format("SELECT * FROM `players` WHERE `username` = '{0}'", username);
             cmd.Connection = connection;
 
+            mutex.WaitOne();
             connection.Open();
             MySqlDataReader read = cmd.ExecuteReader();
             while (read.Read())
@@ -52,6 +53,7 @@ namespace CubeWorldTrees.Models
             }
             read.Close();
             connection.Close();
+            mutex.ReleaseMutex();
 
             return null;
         }
