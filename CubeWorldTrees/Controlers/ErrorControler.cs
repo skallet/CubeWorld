@@ -9,8 +9,8 @@ namespace CubeWorldTrees.Controlers
     class ErrorControler : BaseControler
     {
 
-        public ErrorControler(HttpListenerContext Context)
-            : base(Context)
+        public ErrorControler(HttpListenerContext Context, Map.Map World)
+            : base(Context, World)
         {
         }
 

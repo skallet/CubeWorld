@@ -29,7 +29,7 @@ namespace CubeWorldTrees
 
             Console.WriteLine("QuadTree - initialize & saving map data");
             sw.Start();
-            Trees.QuadTree.QuadTree<Map.Block> quadTree = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(space);
+            Trees.QuadTree.QuadTree<Map.Block> quadTree = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(space, 0);
             {
                 for (int x = 0; x < width; x++)
                 {
@@ -140,7 +140,7 @@ namespace CubeWorldTrees
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            Trees.QuadTree.QuadTree<Map.Block> tree = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(space);
+            Trees.QuadTree.QuadTree<Map.Block> tree = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(space, 0);
 
             sw.Stop();
             init = sw.ElapsedMilliseconds;
@@ -217,7 +217,7 @@ namespace CubeWorldTrees
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            Trees.QuadTree.QuadTree<Map.Block> world = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(space);
+            Trees.QuadTree.QuadTree<Map.Block> world = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(space, 0);
 
             sw.Stop();
             init = sw.ElapsedMilliseconds;
@@ -226,7 +226,7 @@ namespace CubeWorldTrees
             worldx = 10;
             worldy = 10;
 
-            part = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(space);
+            part = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(space, 0);
             location = new Map.Rectangle(worldx, worldy, 1);
             block = new Map.Block(0, location);
             block.tree = part;
@@ -250,7 +250,7 @@ namespace CubeWorldTrees
             worldx = 15;
             worldy = 15;
 
-            part = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(space);
+            part = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(space, 0);
             location = new Map.Rectangle(worldx, worldy, 1);
             block = new Map.Block(0, location);
             block.tree = part;
@@ -430,6 +430,55 @@ namespace CubeWorldTrees
             mt.ReleaseMutex();
         }
 
+        public static void WorldTestBlock(int tyles = 16, int treeChaining = 2)
+        {
+            MySqlConnection connection = new MySqlConnection("Database=cubeworld;DataSource=localhost;UserId=root;Password=root");
+            Models.TilesModel model = new Models.TilesModel(connection, tyles);
+            Map.Map map = new Map.Map(model, tyles, treeChaining);
+
+            Map.Rectangle coord = new Map.Rectangle(0, 0, 1), coords = new Map.Rectangle(0, 0, 1);
+            Map.Block blockA, blockB;
+            Trees.QuadTree.QuadTree<Map.Block> tree;
+
+            int totalBlocks = (int)Math.Pow(tyles, treeChaining + 1) * (int)Math.Pow(tyles, treeChaining + 1);
+
+            List<Map.Block> list, list2;
+            int errors = 0, tests = 0;
+
+            tree = map.getTree(new Map.Rectangle(0, 0, 16));
+
+
+            return;
+
+            for (int i = 1; i < 15; i++)
+            {
+                list = map.getIntersect(new Map.Rectangle(8, 0, 16));
+                list2 = map.getIntersect(new Map.Rectangle(i, 0, 16));
+
+                foreach (Map.Block b in list)
+                {
+                    foreach (Map.Block b2 in list2)
+                    {
+                        if (b.location.x == b2.location.x)
+                        {
+                            if (b.location.y == b2.location.y)
+                            {
+                                tests++;
+                                if (b.val != b2.val)
+                                {
+                                    errors++;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                //System.Threading.Thread.Sleep(1000);
+            }
+
+            Console.WriteLine("Hodnoceni počtu dlaždic: {0}% ({1} ok, {2} bad)", (100 * (tests - errors)) / tests, tests - errors, errors);
+        }
+
         public static void WorldSizeTest(int tyles = 256, int trees = 10)
         {
             Map.Rectangle coord = new Map.Rectangle(0, 0, 1);
@@ -469,7 +518,7 @@ namespace CubeWorldTrees
              */
 
             /* World testy + implementace
-            Program.WorldTest(16, 1);
+            Program.WorldTestBlock(16, 2);
             Console.ReadKey();
              */
 

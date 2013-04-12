@@ -19,6 +19,8 @@ namespace CubeWorldTrees.Map
 
         protected MapGenerator generator;
 
+        public static Mutex moveMutex = new Mutex(false, "moveMutex");
+
         protected static int tiles;
 
         public static int getTiles
@@ -44,7 +46,7 @@ namespace CubeWorldTrees.Map
             model = Model;
 
             space = new Rectangle(0, 0, tiles);
-            root = Trees.QuadTree.QuadTree<Block>.getFreeTree(space);
+            root = Trees.QuadTree.QuadTree<Block>.getFreeTree(space, treeChaining);
             generator = new MapGenerator(tiles, tiles);
         }
 
@@ -57,7 +59,7 @@ namespace CubeWorldTrees.Map
             Block block;
             generator.Generate();
 
-            Trees.QuadTree.QuadTree<Block> quadTree = Trees.QuadTree.QuadTree<Block>.getFreeTree(new Rectangle(0, 0, tiles));
+            Trees.QuadTree.QuadTree<Block> quadTree = Trees.QuadTree.QuadTree<Block>.getFreeTree(new Rectangle(0, 0, tiles), 0);
             {
                 for (int x = 0; x < tiles; x++)
                 {
@@ -81,19 +83,34 @@ namespace CubeWorldTrees.Map
 
         protected Block getBottomTreeBlock(Rectangle coords)
         {
+            int newX, newY;
+            int width, height = treeChaining;
+
+            width = getActualNodeWidth(height - 1);
+
             Trees.QuadTree.QuadTree<Block> node = root, parent;
             parent = root;
-            Rectangle nodeLocation = new Rectangle(coords.x, coords.y, tiles), elementLocation;
-            Block block;
-            int newX, newY;
+
+            Rectangle nodeLocation = new Rectangle(coords.x / width, coords.y / width, tiles), elementLocation;
+            Block bottomBlock = node.Get(nodeLocation);
+
+            if (bottomBlock == null)
+            {
+                bottomBlock = new Block(1, nodeLocation);
+                bottomBlock.tree = Trees.QuadTree.QuadTree<Block>.getFreeTree(new Rectangle(nodeLocation.x, nodeLocation.y, tiles), 0);
+                node.Insert(bottomBlock);
+            }
 
             //Console.WriteLine("Target: {0}, {1}, {2}, steps: {3}", coords.x, coords.y, coords.width, treeChaining - 1);
-            //Console.WriteLine("Root {0}, {1}, {2}", 0, 0, nodeLocation.width);
+            //Console.WriteLine("Root {0}, {1}, {2}", nodeLocation.x, nodeLocation.y, nodeLocation.width);
 
             for (int i = 0; i < treeChaining - 1; i++)
             {
-                newX = (nodeLocation.x / tiles);
-                newY = (nodeLocation.y / tiles);
+                height = treeChaining - 1 - i;
+                width = getActualNodeWidth(height - 1);
+
+                newX = (nodeLocation.x / width);
+                newY = (nodeLocation.y / width);
 
                 //Console.WriteLine("- Node {0}, {1}, {2}", newX, newY, tiles);
 
@@ -101,27 +118,16 @@ namespace CubeWorldTrees.Map
                 nodeLocation = new Rectangle(newX, newY, 1);
 
                 parent = node;
-                block = node.Get(nodeLocation);
+                bottomBlock = node.Get(nodeLocation);
 
-                if (block == null)
+                if (bottomBlock == null)
                 {
-                    block = new Block(1, new Rectangle(newX, newY, 1));
-                    block.tree = new Trees.QuadTree.QuadTree<Block>(elementLocation);
-                    node.Insert(block);
+                    bottomBlock = new Block(1, new Rectangle(newX, newY, 1));
+                    bottomBlock.tree = Trees.QuadTree.QuadTree<Block>.getFreeTree(elementLocation, height - 1);
+                    node.Insert(bottomBlock);
                 }
 
                 node = parent.Get(nodeLocation).tree;
-            }
-
-            node = parent;
-            Rectangle localCoords = new Rectangle(coords.x % tiles, coords.y % tiles, 1);
-            Block bottomBlock = node.Get(localCoords);
-
-            if (bottomBlock == null)
-            {
-                bottomBlock = new Block(1, localCoords);
-                bottomBlock.tree = Trees.QuadTree.QuadTree<Block>.getFreeTree(new Rectangle(coords.x % tiles, coords.y % tiles, tiles), tiles * localCoords.x + localCoords.y);
-                node.Insert(bottomBlock);
             }
 
             return bottomBlock;
@@ -137,6 +143,11 @@ namespace CubeWorldTrees.Map
         public int getMapWidth()
         {
             return (int)Math.Pow(tiles, treeChaining + 1);
+        }
+
+        protected int getActualNodeWidth(int height)
+        {
+            return (int)Math.Pow(tiles, height);
         }
 
         #endregion
@@ -190,6 +201,12 @@ namespace CubeWorldTrees.Map
             return treeBlock.tree;
         }
 
+        public Trees.QuadTree.QuadTree<Block> getIntersectTree(Rectangle coord)
+        {
+            Rectangle treeCoord = new Rectangle(coord.x / tiles, coord.y / tiles, tiles);
+            return getTree(treeCoord);
+        }
+
         public List<Block> getIntersect(Rectangle space)
         {
             List<Block> list = new List<Block>();
@@ -226,7 +243,13 @@ namespace CubeWorldTrees.Map
                 }
             }
 
-            //Console.WriteLine("Space {0} {1} => {2} {3}", space.x, space.y, space.x + space.width, space.y + space.width);
+            /*Console.WriteLine("Space {0} {1} => {2} {3}", space.x, space.y, space.x + space.width, space.y + space.width);
+            Console.WriteLine("In {0} tree.", listTree.Count());
+
+            foreach (Block i in listTree)
+            {
+                Console.WriteLine("== tree {0} {1}", i.location.x, i.location.y);
+            }*/
 
             Block block;
             foreach (Block i in listTree)
@@ -241,7 +264,7 @@ namespace CubeWorldTrees.Map
 
                             if (block != null)
                             {
-                                //Console.WriteLine("Test {0} {1}", x + i.location.x, y + i.location.y);
+                                //Console.WriteLine("Test {0} {1}", x + i.location.x * i.location.width, y + i.location.y * i.location.width);
                                 list.Add(new Block(block.val, new Rectangle(x + i.location.x * i.location.width, y + i.location.y * i.location.width, 1)));
                             }
                         }

@@ -36,7 +36,7 @@ namespace CubeWorldTrees.Server
 
         public void processRequest()
         {
-            Console.WriteLine("> Client access from {0}", context.Request.RemoteEndPoint.Address);
+            //Console.WriteLine("> Client access from {0}", context.Request.RemoteEndPoint.Address);
             //Console.WriteLine(context.Request.Headers.ToString());
 
             Stopwatch sw = new Stopwatch();
@@ -112,17 +112,17 @@ namespace CubeWorldTrees.Server
                 switch (absolutePath)
                 {
                     case "/":
-                        controler = new Controlers.MapControler(context);
+                        controler = new Controlers.MapControler(context, server.world);
                         break;
                     case "/initialize":
                     case "/position":
                         controler = new Controlers.JsonControler(context, server.world);
                         break;
                     case "/login":
-                        controler = new Controlers.LoginControler(context);
+                        controler = new Controlers.LoginControler(context, server.world);
                         break;
                     default:
-                        controler = new Controlers.ErrorControler(context);
+                        controler = new Controlers.ErrorControler(context, server.world);
                         break;
                 }
 
@@ -132,7 +132,7 @@ namespace CubeWorldTrees.Server
             Trees.QuadTree.QuadTree<Map.Block>.unsetAllTree();
 
             sw.Stop();
-            Console.WriteLine("> Request was completed for {1} ms", context.Request.RemoteEndPoint.Address, sw.ElapsedMilliseconds);
+            //Console.WriteLine("> Request was completed for {1} ms", context.Request.RemoteEndPoint.Address, sw.ElapsedMilliseconds);
         }
 
         #endregion request

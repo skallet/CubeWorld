@@ -12,10 +12,10 @@ namespace CubeWorldTrees.Trees.QuadTree
 
         struct TreeStruct
         {
-            public int lastUser;
+            public List<int> threadUsers;
             public Map.Rectangle space;
             public QuadTree<T> tree;
-            public int treeId;
+            public int height;
         }
 
         QuadTreeNode<T> m_root;
@@ -28,9 +28,8 @@ namespace CubeWorldTrees.Trees.QuadTree
 
         static readonly object _locker = new object();
 
-        public static QuadTree<T> getFreeTree(Map.Rectangle space, int treeId = 0)
+        public static QuadTree<T> getFreeTree(Map.Rectangle space, int height)
         {
-            //Console.WriteLine("Looking for {0} {1} {2}", space.x, space.y, space.width);
             int threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
             QuadTree<T> tree = new QuadTree<T>(space);
             Boolean found = false;
@@ -38,29 +37,40 @@ namespace CubeWorldTrees.Trees.QuadTree
 
             mutex.WaitOne();
 
-            for (int i = 0; i < treeList.Count; i++)
+            for (int i = 0; i < treeList.Count(); i++)
             {
                 ts = treeList[i];
 
-                if (ts.treeId != 0 && ts.treeId == treeId)
+                if (ts.height == height
+                    && ts.space.Equals(space))
                 {
+                    //Console.WriteLine("Using existing tree! {0}", height);
                     found = true;
                     tree = ts.tree;
-                    ts.lastUser = threadId;
-                    ts.space = space;
 
+                    if (!ts.threadUsers.Contains(threadId))
+                        ts.threadUsers.Add(threadId);
+
+                    break;
+                }
+                else if (ts.threadUsers.Count() == 0)
+                {
+                    //Console.WriteLine("Rewriting tree! {0}", height);
+                    treeList.Remove(ts);
                     break;
                 }
             }
 
-            if (!found && treeList.Count < MAX_INSTANCES)
+            if (!found && treeList.Count() < MAX_INSTANCES)
             {
+                //Console.WriteLine("Creating new tree! {0}", height);
                 found = true;
                 ts = new TreeStruct();
                 ts.tree = tree;
-                ts.lastUser = threadId;
+                ts.threadUsers = new List<int>();
+                ts.threadUsers.Add(threadId);
                 ts.space = space;
-                ts.treeId = treeId;
+                ts.height = height;
 
                 treeList.Add(ts);
             }
@@ -73,7 +83,7 @@ namespace CubeWorldTrees.Trees.QuadTree
                     while (treeList.Count >= MAX_INSTANCES)
                         Monitor.Wait(_locker);
                 
-                return getFreeTree(space);
+                return getFreeTree(space, height);
             }
 
             return tree;
@@ -90,19 +100,24 @@ namespace CubeWorldTrees.Trees.QuadTree
             {
                 ts = treeList[i];
 
-                lock (_locker)
+                if (ts.threadUsers.Contains(threadId))
                 {
-                    treeList.Remove(ts);    
-                    Monitor.Pulse(_locker);
+                    ts.threadUsers.Remove(threadId);
+
+                    if (ts.threadUsers.Count() == 0)
+                    {
+                        lock (_locker)
+                        {
+                            Monitor.Pulse(_locker);
+                        }
+                    }
                 }
             }
-
-            //Console.WriteLine("Space: {0}", MAX_INSTANCES - treeList.Count);
 
             mutex.ReleaseMutex();
         }
 
-        public QuadTree(Map.Rectangle space) 
+        private QuadTree(Map.Rectangle space) 
         {
             m_root = new QuadTreeNode<T>(space);
         }

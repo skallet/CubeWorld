@@ -21,11 +21,15 @@ namespace CubeWorldTrees.Controlers
 
         public bool responseSent = false;
 
-        public BaseControler(HttpListenerContext Context)
+        protected Map.Map world;
+
+        public BaseControler(HttpListenerContext Context, Map.Map World)
         {
             context = Context;
+            world = World;
+
             Models.UserModel usersModel = new Models.UserModel(Server.Server.connection);
-            user = new Controlers.UserControler(context, usersModel);
+            user = new Controlers.UserControler(context, usersModel, world);
         }
 
         public void Redirect(string url)

@@ -10,8 +10,8 @@ namespace CubeWorldTrees.Controlers
     class MapControler : BaseControler
     {
 
-        public MapControler(HttpListenerContext Context)
-            : base(Context)
+        public MapControler(HttpListenerContext Context, Map.Map World)
+            : base(Context, World)
         {
         }
 

@@ -14,12 +14,15 @@ namespace CubeWorldTrees.Controlers
 
         protected HttpListenerContext context;
 
-        protected Models.UserModel model;
+        public Models.UserModel model;
 
-        public UserControler(HttpListenerContext Context, Models.UserModel Model)
+        protected Map.Map world;
+
+        public UserControler(HttpListenerContext Context, Models.UserModel Model, Map.Map World)
         {
             context = Context;
             model = Model;
+            world = World;
 
             Cookie sessid = context.Request.Cookies["sessid"];
             string sid = (sessid != null && !sessid.Expired) ? sessid.Value.ToString() : "";
@@ -73,7 +76,15 @@ namespace CubeWorldTrees.Controlers
             {
                 session.set("user", "Registred", true);
                 session.set("username", userData["username"].ToString());
+                session.set("id", userData["id"].ToString());
+
+                session.set("pos-x", userData["x"].ToString());
+                session.set("pos-y", userData["y"].ToString());
+
                 session.forceValidFile();
+
+                int x = Convert.ToInt32(session.get("pos-x"));
+                int y = Convert.ToInt32(session.get("pos-y"));
             }
         }
 
@@ -95,6 +106,9 @@ namespace CubeWorldTrees.Controlers
 
         public void setPosition(Map.Rectangle position)
         {
+            int id = Convert.ToInt32(session.get("id"));
+            model.updateUserPosition(id, position);
+
             session.set("pos-x", Convert.ToString(position.x));
             session.set("pos-y", Convert.ToString(position.y));
         }

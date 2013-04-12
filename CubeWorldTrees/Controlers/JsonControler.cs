@@ -9,12 +9,9 @@ namespace CubeWorldTrees.Controlers
     class JsonControler : BaseControler
     {
 
-        protected Map.Map world;
-
         public JsonControler(HttpListenerContext Context, Map.Map World)
-            : base(Context)
+            : base(Context, World)
         {
-            world = World;
             renderTemplate = false;
         }
 
@@ -41,7 +38,21 @@ namespace CubeWorldTrees.Controlers
                 
 
                 sb.Append("\"position\": {\"x\": " + position.x + ", \"y\": " + position.y + "}");
-                if (parts.Count > 0)
+
+                List<System.Collections.Hashtable> users = user.model.getUsers();
+                if (users.Count() > 0)
+                {
+                    sb.Append(",");
+
+                    foreach (System.Collections.Hashtable u in users)
+                    {
+                        counter++;
+                        sb.Append("\"user" + counter + "\": {\"x\": " + (u["x"]) + ", \"y\": " + (u["y"]) + ", \"value\": \"" + (u["id"]) + "\"}");
+                    }
+                }
+
+                counter = 0;
+                if (parts.Count() > 0)
                 {
                     sb.Append(",");
                 }
@@ -49,7 +60,8 @@ namespace CubeWorldTrees.Controlers
                 foreach (Map.Block part in parts)
                 {
                     counter++;
-                    sb.Append("\"block" + counter + "\": {\"x\": " + (part.location.x) + ", \"y\": " + (part.location.y) + ", \"value\": \"" + (part.val) + ".png\"}");
+                    sb.Append("\"block" + counter + "\": {\"x\": " + (part.location.x) + ", \"y\": " + (part.location.y) + ", \"value\": \"" + (part.val != 0 ? part.val : 1) + ".png\"}");
+
                     if (counter < parts.Count)
                     {
                         sb.Append(",");
@@ -69,6 +81,7 @@ namespace CubeWorldTrees.Controlers
                     sb.Append("\"status\": \"error\"");
                 }
             }
+            
             sb.Append("}");           
 
             sendJsonResponse(sb.ToString());

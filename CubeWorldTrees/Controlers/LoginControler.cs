@@ -14,8 +14,8 @@ namespace CubeWorldTrees.Controlers
 
         protected List<string> loginFormErrors = new List<string>();
 
-        public LoginControler(HttpListenerContext Context)
-            : base(Context)
+        public LoginControler(HttpListenerContext Context, Map.Map World)
+            : base(Context, World)
         {
         }
 

@@ -3,6 +3,8 @@ var cid = "canvas-map";
 var canvasMinX, canvasMinY;
 var blocks = new Array();
 var matrix = new Array();
+var users = new Array();
+var userImg = new Image();
 var offsetX = 0;
 var offsetY = 0;
 var positionX = 0;
@@ -22,32 +24,18 @@ function Update()
 	$("#debug").append("<br />(Position) X: " + positionX + ", Y: " + positionY);
 	context.fillStyle = "rgba(255, 255, 255, 1)";
 	context.fillRect(0, 0, width, width);
+  
+  offsetX = -(positionX - 5) * 50 + 1;
+  offsetY = -(positionY - 5) * 50 + 1;
 	
-	var playerX = (4 - Math.round(offsetX /50));
+	var playerX = (positionX - Math.round(offsetX /50));
 	if (playerX < 0) {
 		playerX = 0;
 	}
 	
-	var playerY = (4 - Math.round(offsetY /50));
+	var playerY = (positionY - Math.round(offsetY /50));
 	if (playerY < 0) {
 		playerY = 0;
-	}
-	
-	if (positionX != playerX || positionY != playerY) {
-		$.ajax({
-			url: "/position",
-			dataType: 'json',
-			data: {
-				"x": playerX,
-				"y": playerY
-			},
-			success: (function (data, textStatus, jqXHR) {
-				console.log("Position set!");
-			}),
-			error: (function () {
-				console.log("Error while setting position!");
-			})
-		});	
 	}
 	
 	for(var i = 0; i < matrix.length;i ++) {
@@ -55,6 +43,12 @@ function Update()
 		var y = matrix[i].y * 50 + offsetY;
 		context.drawImage(blocks[matrix[i].src], x, y);
 	}
+  
+  for(var i = 0; i < users.length;i ++) {
+    var x = users[i].x * 50 + offsetX;
+		var y = users[i].y * 50 + offsetY;
+		context.drawImage(userImg, x, y);    
+  }
 }
 
 function mouseMove(event) {
@@ -72,7 +66,13 @@ $(document).ready(function () {
 	canvasMinX = $("#" + cid).offset().left;
 	canvasMinY = $("#" + cid).offset().top;
 	var context = document.getElementById(cid);
+  
+  var us = "/content/images/player.png";
+  userImg.src = us;
+  userImg.setAttribute("_src", us);
+  
 	
+  /*
 	$(document).mousedown(function (event) {
 		mouseState.x = event.pageX - offsetX;
 		mouseState.y = event.pageY - offsetY;
@@ -82,25 +82,69 @@ $(document).ready(function () {
 	$(document).mouseup(function (event) {
 		mouseState.pressed = false;
 	});
-	
-	context.addEventListener("mousemove", mouseMove, false);
-	
-	Update();
+  context.addEventListener("mousemove", mouseMove, false);
+  */
+  
+  $(document).keypress(function (event) {
+    console.log("setting" + event.which);
+    var x = positionX;
+    var y = positionY;
+    
+    switch(event.which)
+    {
+      case 87, 119: y--;
+      break;
+      case 83, 115: y++;
+      break;
+      case 65, 97: x--;
+      break;
+      case 68, 100: x++;
+      break;
+      
+      default:
+        return;
+    }
+    
+    $.ajax({
+			url: "/position",
+			dataType: 'json',
+			data: {
+				"x": x,
+				"y": y
+			},
+			success: (function (data, textStatus, jqXHR) {
+        if (data["status"] == "ok")
+        {
+          positionX = x;
+          positionY = y;        
+        }
+			}),
+			error: (function () {
+			})
+		});	
+  });
+  
+  Update();
+  setInterval(function () {
+    Update();
+  }, 500);
 
 	setInterval(function () {
 		$.ajax({
 			url: "/initialize",
 			dataType: 'json',
 			success: (function (data, textStatus, jqXHR) {
-        		var needToUpdate = false;
+        users = new Array();
+        
 				$.each(data, function( index ) {
 					if (index == "position") {
-            if (positionX != this.x || positionY != this.y) {
-              needToUpdate = true;
-            }
-            
 						positionX = this.x;
 						positionY = this.y;
+          } else if (index.indexOf("user") != -1) {
+            var index = users.length;
+            users[index] = new Object();
+            users[index].x = this.x;
+            users[index].y = this.y;          
 					} else {
 						var src = "/content/images/" + this.value;
 						var match = -1;
@@ -118,7 +162,6 @@ $(document).ready(function () {
 							mapImage.setAttribute("_src", src);
 							mapImage.onload = (function () {
 								mapImage.setAttribute("loaded", true);
-								Update();
 							});
 							match = blocks.length;
 							blocks[match] = mapImage;
@@ -135,14 +178,10 @@ $(document).ready(function () {
 						var index = matrix.length;
 						if (mIndex > -1) {
 							index = mIndex;
-							if (matrix[index].src != match)
-								needToUpdate = true;
 						} else {
 							matrix[index] = new Object();
 							matrix[index].x = this.x;
 							matrix[index].y = this.y;
-              
-              needToUpdate = true;
 						}
 						
 						matrix[index].src = match;	
@@ -150,20 +189,17 @@ $(document).ready(function () {
 			    });
 			    
 			    for (var i = 0; i < matrix.length; i ++) {
-  					if (matrix[i].x < (playerX - 8) || matrix[i].x > (playerX + 8)) {
-  						if (matrix[i].y < (playerY - 8) || matrix[i].y > (playerY + 8)) {
+  					if (matrix[i].x < (positionX - 8) || matrix[i].x > (positionX + 8)) {
+  						if (matrix[i].y < (positionY - 8) || matrix[i].y > (positionY + 8)) {
   							delete matrix[i];
   						}	
   					}
 			    }
-			    
-			    if (needToUpdate)
-			    	Update();
 			}),
 			error: (function () {
 				console.log("500: Server did not response!");
 			})
 		});
-	}, 1000);	
+	}, 5000);	
 });
 

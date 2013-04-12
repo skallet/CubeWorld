@@ -35,7 +35,7 @@ namespace CubeWorldTrees.Trees.QuadTree
             if (m_nodes.Count == 0)
                 CreateSubNodes();
 
-            if (m_bounds.width == 1 || m_bounds.Equals(m_block))
+            if (m_bounds.width == 1 || m_bounds.Equals(item.location))
             {
                 m_block = item;
                 return;
@@ -95,12 +95,11 @@ namespace CubeWorldTrees.Trees.QuadTree
             int maxLevel = (int)Math.Log((double)m_bounds.width, 2.0);
             //Console.WriteLine("-- {0}", level);
             //Console.WriteLine("-- Space {0} {1} {2}", m_bounds.x, m_bounds.y, m_bounds.width);
-            //Console.WriteLine("-- Elem  {0} {1} {2}", rect.x, rect.y, rect.width);
 
             if (!m_bounds.Contains(rect))
                 return default(T);
 
-            if (m_bounds.Equals(rect) || (m_bounds.Contains(rect) && maxLevel == level))
+            if (m_block != null && (m_bounds.Equals(rect) || (m_bounds.Contains(rect) && maxLevel == level)))
                 return m_block;
 
             foreach (QuadTreeNode<T> node in m_nodes)
