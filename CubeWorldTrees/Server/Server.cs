@@ -28,7 +28,7 @@ namespace CubeWorldTrees.Server
             int width = 16;
             Server.connection = new MySqlConnection("Database=cubeworld;DataSource=localhost;UserId=root;Password=root");
 
-            world = new Map.Map(new Models.TilesModel(Server.connection, width), width, 1);
+            world = new Map.Map(new Models.TilesModel(Server.connection, width), width, 4);
 
             Console.WriteLine("> Prepering map of total width = {0} tiles ...", world.getMapWidth());
 

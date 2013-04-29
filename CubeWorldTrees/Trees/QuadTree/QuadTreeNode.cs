@@ -13,13 +13,9 @@ namespace CubeWorldTrees.Trees.QuadTree
         public QuadTreeNode(Map.Rectangle Bounds, bool partitioning = true)
         {
             m_bounds = Bounds;
-
-            if (m_bounds.width >= 200 && partitioning)
-                m_parts = new int[m_bounds.width * m_bounds.width];
         }
 
         List<QuadTreeNode<T>> m_nodes = new List<QuadTreeNode<T>>(4);
-        int[] m_parts;
 
         private T m_block;
 
@@ -39,12 +35,6 @@ namespace CubeWorldTrees.Trees.QuadTree
             {
                 m_block = item;
                 return;
-            }
-
-            if (m_parts != null)
-            {
-                int partsKey = (item.location.x - m_bounds.x) * m_bounds.width + (item.location.y - m_bounds.y);
-                m_parts[partsKey] = item.val;
             }
 
             foreach (QuadTreeNode<T> node in m_nodes)
@@ -143,14 +133,6 @@ namespace CubeWorldTrees.Trees.QuadTree
             m_nodes.Add(new QuadTreeNode<T>(new Map.Rectangle(m_bounds.x, m_bounds.y + halfWidth, halfWidth)));
             m_nodes.Add(new QuadTreeNode<T>(new Map.Rectangle(m_bounds.x + halfWidth, m_bounds.y + halfWidth, halfWidth)));
             m_nodes.Add(new QuadTreeNode<T>(new Map.Rectangle(m_bounds.x + halfWidth, m_bounds.y, halfWidth)));
-        }
-
-        public int GetPart(int key)
-        {
-            if (m_parts == null || key < 0 || key > m_bounds.width * m_bounds.width)
-                return 0;
-            
-            return m_parts[key];
         }
 
     }

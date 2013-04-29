@@ -83,51 +83,39 @@ namespace CubeWorldTrees.Map
 
         protected Block getBottomTreeBlock(Rectangle coords)
         {
-            int newX, newY;
-            int width, height = treeChaining;
+            int newX = coords.x, newY = coords.y;
+            int newWidth, width, height = treeChaining;
 
-            width = getActualNodeWidth(height - 1);
+            width = getActualNodeWidth(height);
+            Trees.QuadTree.QuadTree<Block> node = root, parent = null;
+            Rectangle location = null;
 
-            Trees.QuadTree.QuadTree<Block> node = root, parent;
-            parent = root;
+            Block bottomBlock = null;
 
-            Rectangle nodeLocation = new Rectangle(coords.x / width, coords.y / width, tiles), elementLocation;
-            Block bottomBlock = node.Get(nodeLocation);
-
-            if (bottomBlock == null)
+            while (height > 0)
             {
-                bottomBlock = new Block(1, nodeLocation);
-                bottomBlock.tree = Trees.QuadTree.QuadTree<Block>.getFreeTree(new Rectangle(nodeLocation.x, nodeLocation.y, tiles), 0);
-                node.Insert(bottomBlock);
-            }
-
-            //Console.WriteLine("Target: {0}, {1}, {2}, steps: {3}", coords.x, coords.y, coords.width, treeChaining - 1);
-            //Console.WriteLine("Root {0}, {1}, {2}", nodeLocation.x, nodeLocation.y, nodeLocation.width);
-
-            for (int i = 0; i < treeChaining - 1; i++)
-            {
-                height = treeChaining - 1 - i;
-                width = getActualNodeWidth(height - 1);
-
-                newX = (nodeLocation.x / width);
-                newY = (nodeLocation.y / width);
-
-                //Console.WriteLine("- Node {0}, {1}, {2}", newX, newY, tiles);
-
-                elementLocation = new Rectangle(newX, newY, tiles);
-                nodeLocation = new Rectangle(newX, newY, 1);
-
                 parent = node;
-                bottomBlock = node.Get(nodeLocation);
+
+                height--;
+                newWidth = getActualNodeWidth(height);
+
+                location = new Rectangle(newX / width, newY / width, width);
+
+                newX = newX % width;
+                newY = newY % width;
+
+                width = newWidth;
+
+                bottomBlock = node.Get(location);
 
                 if (bottomBlock == null)
                 {
-                    bottomBlock = new Block(1, new Rectangle(newX, newY, 1));
-                    bottomBlock.tree = Trees.QuadTree.QuadTree<Block>.getFreeTree(elementLocation, height - 1);
+                    bottomBlock = new Block(1, new Rectangle(location.x, location.y, newWidth));
+                    bottomBlock.tree = Trees.QuadTree.QuadTree<Block>.getFreeTree(location, height);
                     node.Insert(bottomBlock);
                 }
 
-                node = parent.Get(nodeLocation).tree;
+                node = bottomBlock.tree;
             }
 
             return bottomBlock;
@@ -135,9 +123,46 @@ namespace CubeWorldTrees.Map
 
         protected void insetrBottomTreeBlock(Block block)
         {
-            Block node = getBottomTreeBlock(block.location);
-            //Console.WriteLine("Trying insert to {0}, {1} from {2}, {3}", node.location.x, node.location.y, block.location.x, block.location.y);
-            node.tree.Insert(block);
+            int newX = block.location.x, newY = block.location.y;
+            int newWidth, width, height = treeChaining;
+
+            width = getActualNodeWidth(height);
+            Trees.QuadTree.QuadTree<Block> node = root, parent;
+            parent = node;
+            Rectangle location = null;
+
+            Block bottomBlock = null;
+
+            while (height > 0)
+            {
+                parent = node;
+
+                height--;
+                newWidth = getActualNodeWidth(height);
+
+                location = new Rectangle(newX / width, newY / width, width);
+
+                newX = newX % width;
+                newY = newY % width;
+
+                width = newWidth;
+
+                bottomBlock = node.Get(location);
+
+                if (bottomBlock == null)
+                {
+                    bottomBlock = new Block(1, new Rectangle(location.x, location.y, newWidth));
+                    bottomBlock.tree = Trees.QuadTree.QuadTree<Block>.getFreeTree(location, height);
+                    node.Insert(bottomBlock);
+                }
+
+                node = bottomBlock.tree;
+            }
+
+            if (parent != null)
+            {
+                parent.Insert(new Block(block.val, new Rectangle(location.x, location.y, width)));
+            }
         }
 
         public int getMapWidth()
@@ -166,7 +191,7 @@ namespace CubeWorldTrees.Map
 
         public Trees.QuadTree.QuadTree<Block> getTree(Rectangle coord)
         {
-            Block treeBlock = getBottomTreeBlock(coord).tree.Get(coord);
+            Block treeBlock = getBottomTreeBlock(coord);
 
             if (coord.x < 0 
                 || coord.y < 0
@@ -176,7 +201,7 @@ namespace CubeWorldTrees.Map
                 return null;
             }
 
-            if (treeBlock == null || treeBlock.tree == null)
+            if (treeBlock == null || treeBlock.tree == null || treeBlock.tree.DumpCount() == 0)
             {
                 Block block = new Block(0, coord);
 
@@ -187,6 +212,7 @@ namespace CubeWorldTrees.Map
                 }
                 else
                 {
+                    //Console.WriteLine("Creating tree...");
                     Rectangle baseCoords = new Rectangle(coord.x * tiles, coord.y * tiles, coord.width);
                     block.tree = generate(tiles);
                     model.insertTree(block.tree, baseCoords);
@@ -235,7 +261,6 @@ namespace CubeWorldTrees.Map
                         treeBlock = new Block(listTree.Count, coords);
 
                         treeBlock.tree = getTree(coords);
-                        //Console.WriteLine("Getting tree X: {0}, Y: {1}, width: {2}, Exist: {3}", coords.x, coords.y, coords.width, treeBlock.tree != null);
 
                         if (treeBlock.tree != null)
                             listTree.Add(treeBlock);
@@ -252,8 +277,10 @@ namespace CubeWorldTrees.Map
             }*/
 
             Block block;
+            int bx, by;
             foreach (Block i in listTree)
             {
+                //Console.WriteLine("Saving tree {0} {1}", i.location.x, i.location.y);
                 for (int x = 0; x < tiles; x++)
                 {
                     for (int y = 0; y < tiles; y++)
@@ -261,11 +288,13 @@ namespace CubeWorldTrees.Map
                         if (space.Contains(new Rectangle(x + i.location.x * i.location.width, y + i.location.y * i.location.width, 1))) 
                         {
                             block = i.tree.Get(new Rectangle(x, y, 1));
+                            bx = block.location.x + i.location.x * i.location.width;
+                            by = block.location.y + i.location.y * i.location.width;
 
                             if (block != null)
                             {
-                                //Console.WriteLine("Test {0} {1}", x + i.location.x * i.location.width, y + i.location.y * i.location.width);
-                                list.Add(new Block(block.val, new Rectangle(x + i.location.x * i.location.width, y + i.location.y * i.location.width, 1)));
+                                list.Add(new Block(block.val, new Rectangle(bx, by, 1)));
+                                //System.Threading.Thread.Sleep(500);
                             }
                         }
                     }

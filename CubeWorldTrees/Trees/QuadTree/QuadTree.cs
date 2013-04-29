@@ -44,7 +44,6 @@ namespace CubeWorldTrees.Trees.QuadTree
                 if (ts.height == height
                     && ts.space.Equals(space))
                 {
-                    //Console.WriteLine("Using existing tree! {0}", height);
                     found = true;
                     tree = ts.tree;
 
@@ -140,42 +139,6 @@ namespace CubeWorldTrees.Trees.QuadTree
         public int DumpCount()
         {
             return m_root.DumpCount();
-        }
-
-        public int[,] GetSpace(Map.Rectangle position, int depth, out Map.Rectangle zero)
-        {
-            zero = null;
-
-            if (depth < 1 || depth > 8)
-                return null;
-
-            int width = (int)Math.Pow(2, depth);
-            int[,] space = new int[width, width];
-
-            //Console.WriteLine("Attempt to {0:D} {1:D} from {2:D} {3:D} of width {4:D}", position.x - (position.x % width), position.y - (position.y % width), position.x, position.y, width);
-            zero = new Map.Rectangle(position.x - (position.x % width), position.y - (position.y % width), width);
-            QuadTreeNode<T> node = m_root.GetNode(zero);
-
-            //test
-            Random rand = new Random();
-
-            if (node != null)
-            {
-                int pointer = 0;
-                for (int x = 0; x < width; x++)
-                {
-                    for (int y = 0; y < width; y++)
-                    {
-                        pointer = x * width + y;
-                        //space[x, y] = rand.Next(1, 3);
-                        space[x, y] = node.GetPart(pointer);
-                    }
-                }
-
-                return space;
-            }
-
-            return null;
         }
 
     }

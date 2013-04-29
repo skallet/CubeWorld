@@ -100,9 +100,15 @@ namespace CubeWorldTrees.Models
             connection.Open();
             MySqlDataReader read = cmd.ExecuteReader();
 
+            int x, y, value;
+
             while (read.Read())
             {
-                tree.Insert(new Map.Block(read.GetInt32("value"), new Map.Rectangle(read.GetInt32("x") % coord.width, read.GetInt32("y") % coord.width, 1)));
+                x = read.GetInt32("x") % coord.width;
+                y = read.GetInt32("y") % coord.width;
+                value = read.GetInt32("value");
+
+                tree.Insert(new Map.Block(value, new Map.Rectangle(x, y, 1)));
             }
 
             read.Close();
