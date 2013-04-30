@@ -10,6 +10,11 @@ namespace CubeWorldTrees.Trees.QuadTree
 
         private Map.Rectangle m_bounds;
 
+        public int getTiles()
+        {
+            return m_bounds.width;
+        }
+
         public QuadTreeNode(Map.Rectangle Bounds, bool partitioning = true)
         {
             m_bounds = Bounds;
@@ -47,6 +52,11 @@ namespace CubeWorldTrees.Trees.QuadTree
             }
 
             return;
+        }
+
+        public void DumpSpace()
+        {
+            Console.WriteLine("Space: {0} {1} {2}", m_bounds.x, m_bounds.y, m_bounds.width);
         }
 
         public void Dump()

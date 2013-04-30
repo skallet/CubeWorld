@@ -132,7 +132,7 @@ namespace CubeWorldTrees.Server
             Trees.QuadTree.QuadTree<Map.Block>.unsetAllTree();
 
             sw.Stop();
-            //Console.WriteLine("> Request was completed for {1} ms", context.Request.RemoteEndPoint.Address, sw.ElapsedMilliseconds);
+            Console.WriteLine("> Request was completed for {1} ms", context.Request.RemoteEndPoint.Address, sw.ElapsedMilliseconds);
         }
 
         #endregion request

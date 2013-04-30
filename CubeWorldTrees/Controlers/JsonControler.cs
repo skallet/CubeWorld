@@ -37,7 +37,7 @@ namespace CubeWorldTrees.Controlers
 
                 
 
-                sb.Append("\"position\": {\"x\": " + position.x + ", \"y\": " + position.y + "}");
+                sb.Append("\"position\": {\"x\": " + position.x + ", \"y\": " + position.y + ", \"utime\": " + (user.getLastMoveTimestamp()) + ", \"id\": " + (user.getId()) + "}");
 
                 List<System.Collections.Hashtable> users = user.model.getUsers();
                 if (users.Count() > 0)
@@ -47,7 +47,7 @@ namespace CubeWorldTrees.Controlers
                     foreach (System.Collections.Hashtable u in users)
                     {
                         counter++;
-                        sb.Append("\"user" + counter + "\": {\"x\": " + (u["x"]) + ", \"y\": " + (u["y"]) + ", \"value\": \"" + (u["id"]) + "\"}");
+                        sb.Append("\"user" + counter + "\": {\"x\": " + (u["x"]) + ", \"y\": " + (u["y"]) + ", \"id\": \"" + (u["id"]) + "\"}");
                     }
                 }
 
@@ -60,7 +60,13 @@ namespace CubeWorldTrees.Controlers
                 foreach (Map.Block part in parts)
                 {
                     counter++;
-                    sb.Append("\"block" + counter + "\": {\"x\": " + (part.location.x) + ", \"y\": " + (part.location.y) + ", \"value\": \"" + (part.val != 0 ? part.val : 1) + ".png\"}");
+                    sb.Append("\"block" + counter +
+                        "\": {\"x\": " + (part.location.x) +
+                        ", \"y\": " + (part.location.y) +
+                        ", \"value\": \"" + (part.val) +
+                        ".png\", \"open\": " + (part.isSolid() ? "0" : "1") +
+                        ", \"owner\": " + (part.player) +
+                        "}");
 
                     if (counter < parts.Count)
                     {
@@ -73,13 +79,61 @@ namespace CubeWorldTrees.Controlers
                 if (context.Request.QueryString.GetKey(0) == "x"
                     && context.Request.QueryString.GetKey(1) == "y")
                 {
-                    user.setPosition(new Map.Rectangle(Convert.ToInt32(context.Request.QueryString.Get(0)), Convert.ToInt32(context.Request.QueryString.Get(1)), 1));
-                    sb.Append("\"status\": \"ok\"");
+                    int x = Convert.ToInt32(context.Request.QueryString.Get(0));
+                    int y = Convert.ToInt32(context.Request.QueryString.Get(1));
+
+                    Map.Rectangle pos = new Map.Rectangle(x, y, 1);
+                    Trees.QuadTree.QuadTree<Map.Block> tree = world.getIntersectTree(pos);
+
+                    if (tree != null)
+                    {
+                        Map.Block moveBlock = tree.Get(pos);
+
+                        if (!moveBlock.isSolid())
+                        {
+                            UInt64 lm = UInt64.Parse(user.getLastMoveTimestamp());
+                            UInt64 now = UInt64.Parse(DateTime.Now.ToString("yyyyMMddHHmmssfff"));
+
+                            if ((now - lm) >= 100)
+                            {
+                                Map.Rectangle position = user.getPosition();
+
+                                if (Math.Abs(x - position.x) <= 1
+                                    && Math.Abs(y - position.y) <= 1)
+                                {
+                                    String ut = user.setPosition(pos);
+                                    position = user.getPosition();
+
+                                    sb.Append("\"status\": \"ok\", \"utime\": " + ut + ", \"x\": " + position.x + ", \"y\": " + position.y);
+                                }
+                                else
+                                {
+                                    sb.Append("\"status\": \"error\", \"msg\": \"Try to move too far from previous position!\"");
+                                }
+                            }
+                            else
+                            {
+                                sb.Append("\"status\": \"error\", \"msg\": \"Move before time limit!\"");
+                            }
+                        }
+                        else
+                        {
+                            sb.Append("\"status\": \"error\", \"msg\": \"This block is solid!\"");
+                        }
+                    }
+                    else
+                    {
+                        sb.Append("\"status\": \"error\", \"msg\": \"Out of range!\"");
+                    }
                 }
                 else
                 {
                     sb.Append("\"status\": \"error\"");
                 }
+            }
+            else if (absolutePath == "/modify")
+            {
+                sb.Append("\"status\": \"error\"");
             }
             
             sb.Append("}");           

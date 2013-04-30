@@ -91,29 +91,37 @@ namespace CubeWorldTrees.Models
 
         public Trees.QuadTree.QuadTree<Map.Block> loadTree(Map.Rectangle coord)
         {
-            Trees.QuadTree.QuadTree<Map.Block> tree = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(new Map.Rectangle(0, 0, coord.width), 0);
+            Trees.QuadTree.QuadTree<Map.Block> tree = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(new Map.Rectangle(coord.x, coord.y, coord.width), 0);
             MySqlCommand cmd = new MySqlCommand();
-            cmd.CommandText = String.Format("SELECT `image` AS value, X( POINTN( EXTERIORRING(  `coord` ) , 1 ) ) AS x, Y( POINTN( EXTERIORRING(  `coord` ) , 1 ) ) AS y  FROM `tiles` WHERE INTERSECTS(`coord`, {0})", getSearchPolygonString(coord.x * coord.width, coord.y * coord.width, coord.width));
+            cmd.CommandText = String.Format("SELECT `image` AS value, X( POINTN( EXTERIORRING(  `coord` ) , 1 ) ) AS x, Y( POINTN( EXTERIORRING(  `coord` ) , 1 ) ) AS y, owner FROM `tiles` WHERE INTERSECTS(`coord`, {0})", getSearchPolygonString(coord.x * coord.width, coord.y * coord.width, coord.width));
+            System.Diagnostics.Debug.WriteLine(cmd.CommandText);
             cmd.Connection = connection;
 
             mutex.WaitOne();
             connection.Open();
             MySqlDataReader read = cmd.ExecuteReader();
 
-            int x, y, value;
+            int x, y, value, player, count = 0;
+            Map.Block block = null;
 
             while (read.Read())
             {
+                count++;
                 x = read.GetInt32("x") % coord.width;
                 y = read.GetInt32("y") % coord.width;
                 value = read.GetInt32("value");
+                player = read.GetInt32("owner");
 
-                tree.Insert(new Map.Block(value, new Map.Rectangle(x, y, 1)));
+                block = new Map.Block(value, new Map.Rectangle(x, y, 1));
+                block.player = player;
+
+                tree.Insert(block);
             }
 
             read.Close();
             connection.Close();
 
+            /*
             cmd.CommandText = String.Format("SELECT `id` AS id, X( `position` ) AS x, Y( `position` ) AS y  FROM `players` WHERE INTERSECTS(`position`, {0})", getSearchPolygonString(coord.x * coord.width, coord.y * coord.width, coord.width));
             connection.Open();
             read = cmd.ExecuteReader();
@@ -127,7 +135,8 @@ namespace CubeWorldTrees.Models
             }
 
             connection.Close();
-
+            */
+              
             mutex.ReleaseMutex();
 
             return tree;

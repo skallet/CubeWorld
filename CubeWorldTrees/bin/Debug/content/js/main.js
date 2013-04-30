@@ -10,6 +10,9 @@ var offsetY = 0;
 var positionX = 0;
 var positionY = 0;
 var mouseState = new Object();
+var lastChange = 0;
+var userId = 0;
+var canSendQuery = false;
 
 function Update()
 {
@@ -39,16 +42,26 @@ function Update()
 	}
 	
 	for(var i = 0; i < matrix.length;i ++) {
-		var x = matrix[i].x * 50 + offsetX;
-		var y = matrix[i].y * 50 + offsetY;
-		context.drawImage(blocks[matrix[i].src], x, y);
+    if (matrix[i] != undefined && matrix[i].length != 0)
+    {
+  		var x = matrix[i].x * 50 + offsetX;
+  		var y = matrix[i].y * 50 + offsetY;
+  		context.drawImage(blocks[matrix[i].src], x, y);
+    }
 	}
   
   for(var i = 0; i < users.length;i ++) {
-    var x = users[i].x * 50 + offsetX;
-		var y = users[i].y * 50 + offsetY;
-		context.drawImage(userImg, x, y);    
+    if (users[i].id != userId)
+    {
+      var x = users[i].x * 50 + offsetX;
+  		var y = users[i].y * 50 + offsetY;
+  		context.drawImage(userImg, x, y);
+    }    
   }
+  
+  var x = positionX * 50 + offsetX;
+	var y = positionY * 50 + offsetY;
+	context.drawImage(userImg, x, y);
 }
 
 function mouseMove(event) {
@@ -85,8 +98,12 @@ $(document).ready(function () {
   context.addEventListener("mousemove", mouseMove, false);
   */
   
+  canSendQuery = true;   
   $(document).keypress(function (event) {
-    console.log("setting" + event.which);
+    if (!canSendQuery)
+      return;
+    canSendQuery = false;
+    
     var x = positionX;
     var y = positionY;
     
@@ -100,9 +117,38 @@ $(document).ready(function () {
       break;
       case 68, 100: x++;
       break;
+      case 32:
+        canSendQuery = true; 
+        return;
+      break;
       
       default:
+        canSendQuery = true; 
         return;
+    }
+    
+    var ableToMoveLocal = true;
+    
+    for (var i = 0; i < matrix.length; i++)
+    {
+      if (matrix[i] != undefined && matrix[i].length != 0)
+      {
+        if (matrix[i].x == x && matrix[i].y == y)
+        {
+          ableToMoveLocal = matrix[i].open == "1";
+          break;
+        }
+      }      
+    }
+    
+    var memX = positionX;
+    var memY = positionY;
+    
+    if (ableToMoveLocal)
+    {
+      positionX = x;
+      positionY = y;
+      Update();    
     }
     
     $.ajax({
@@ -113,13 +159,30 @@ $(document).ready(function () {
 				"y": y
 			},
 			success: (function (data, textStatus, jqXHR) {
-        if (data["status"] == "ok")
+        if (data["status"] != "ok")
         {
-          positionX = x;
-          positionY = y;        
+          positionX = memX;
+          positionY = memY;
+          canSendQuery = true;     
+          Update();     
+        }
+        else if (data["utime"] != undefined)
+        {
+          if (lastChange < data["utime"])
+          {
+            positionX = data["x"];
+            positionY = data["y"];
+            lastChange = data["utime"];
+            canSendQuery = true; 
+            Update();
+          }
         }
 			}),
 			error: (function () {
+        positionX = memX;
+        positionY = memY;
+        canSendQuery = true;   
+        Update();
 			})
 		});	
   });
@@ -138,13 +201,22 @@ $(document).ready(function () {
         
 				$.each(data, function( index ) {
 					if (index == "position") {
-						positionX = this.x;
-						positionY = this.y;
+            userId = this.id;
+            console.log("LC: " + lastChange + "; UT: " + this.utime, "; <:" + lastChange < this.utime);
+						if (lastChange < this.utime)
+            {
+              positionX = this.x;
+						  positionY = this.y;
+            
+              lastChange = this.utime;
+              Update();
+            }
           } else if (index.indexOf("user") != -1) {
             var index = users.length;
             users[index] = new Object();
             users[index].x = this.x;
-            users[index].y = this.y;          
+            users[index].y = this.y;    
+            users[index].id = this.id;      
 					} else {
 						var src = "/content/images/" + this.value;
 						var match = -1;
@@ -182,19 +254,29 @@ $(document).ready(function () {
 							matrix[index] = new Object();
 							matrix[index].x = this.x;
 							matrix[index].y = this.y;
+              matrix[index].open = this.open;
 						}
 						
 						matrix[index].src = match;	
 					}
 			    });
+          
+          var newMatrix = new Array();
 			    
 			    for (var i = 0; i < matrix.length; i ++) {
-  					if (matrix[i].x < (positionX - 8) || matrix[i].x > (positionX + 8)) {
-  						if (matrix[i].y < (positionY - 8) || matrix[i].y > (positionY + 8)) {
-  							delete matrix[i];
+  					if (matrix[i].x >= (positionX - 8) && matrix[i].x <= (positionX + 8)) {
+  						if (matrix[i].y >= (positionY - 8) && matrix[i].y <= (positionY + 8)) {
+  							newMatrix[newMatrix.length] = matrix[i];
   						}	
   					}
+            
+            delete matrix[i];
 			    }
+          
+          delete matrix;
+          
+          matrix = new Array();
+          matrix = newMatrix;
 			}),
 			error: (function () {
 				console.log("500: Server did not response!");

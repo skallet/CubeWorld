@@ -53,6 +53,7 @@ namespace CubeWorldTrees.Models
 
                 data.Add("x", read.GetInt32("x"));
                 data.Add("y", read.GetInt32("y"));
+                data.Add("mtime", read.GetString("mtime"));
 
                 read.Close();
                 connection.Close();
@@ -66,10 +67,10 @@ namespace CubeWorldTrees.Models
             return null;
         }
 
-        public void updateUserPosition(int id, Map.Rectangle position)
+        public void updateUserPosition(int id, Map.Rectangle position, String mtime)
         {
             MySqlCommand cmd = new MySqlCommand();
-            cmd.CommandText = String.Format("UPDATE `players` SET `position` = POINT({0}, {1}) WHERE `id`={2}", position.x, position.y, id);
+            cmd.CommandText = String.Format("UPDATE `players` SET `position` = POINT({0}, {1}), `mtime` = '{2}' WHERE `id`={3}", position.x, position.y, mtime, id);
             cmd.Connection = connection;
 
             mutex.WaitOne();

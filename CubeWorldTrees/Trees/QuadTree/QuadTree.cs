@@ -31,11 +31,13 @@ namespace CubeWorldTrees.Trees.QuadTree
         public static QuadTree<T> getFreeTree(Map.Rectangle space, int height)
         {
             int threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
-            QuadTree<T> tree = new QuadTree<T>(space);
+            QuadTree<T> tree = new QuadTree<T>(new Map.Rectangle(0, 0, space.width));
             Boolean found = false;
             TreeStruct ts;
 
             mutex.WaitOne();
+
+            //Console.WriteLine("Search {0} {1} {2}", space.x, space.y, height);
 
             for (int i = 0; i < treeList.Count(); i++)
             {
@@ -44,6 +46,7 @@ namespace CubeWorldTrees.Trees.QuadTree
                 if (ts.height == height
                     && ts.space.Equals(space))
                 {
+                    //Console.WriteLine("Getting existing tree! {0}", height);
                     found = true;
                     tree = ts.tree;
 
@@ -128,12 +131,14 @@ namespace CubeWorldTrees.Trees.QuadTree
 
         public T Get(Map.Rectangle rect)
         {
-            return m_root.Get(rect);
+            Map.Rectangle local = new Map.Rectangle(rect.x % m_root.getTiles(), rect.y % m_root.getTiles(), rect.width);
+            return m_root.Get(local);
         }
 
         public void Dump()
         {
-            m_root.Dump();
+            m_root.DumpSpace();
+            //m_root.Dump();
         }
 
         public int DumpCount()

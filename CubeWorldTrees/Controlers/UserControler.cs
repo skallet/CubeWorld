@@ -80,6 +80,8 @@ namespace CubeWorldTrees.Controlers
 
                 session.set("pos-x", userData["x"].ToString());
                 session.set("pos-y", userData["y"].ToString());
+                DateTime dt = DateTime.Parse(userData["mtime"].ToString());
+                session.set("last-move", dt.ToString("yyyyMMddHHmmssfff"));
 
                 session.forceValidFile();
 
@@ -88,29 +90,50 @@ namespace CubeWorldTrees.Controlers
             }
         }
 
+        public int getId()
+        {
+            return Int32.Parse(session.get("id").ToString());
+        }
+
         public Map.Rectangle getPosition()
         {
             int x = Convert.ToInt32(session.get("pos-x"));
             int y = Convert.ToInt32(session.get("pos-y"));
 
-            if (x == 0 && y == 0)
+            if (x < 0 || y < 0)
             {
                 session.set("pos-x", "5");
                 session.set("pos-y", "5");
-                x = 5;
-                y = 5;
             }
 
             return new Map.Rectangle(x, y, 1);
         }
 
-        public void setPosition(Map.Rectangle position)
+        public String getLastMoveTimestamp()
         {
-            int id = Convert.ToInt32(session.get("id"));
-            model.updateUserPosition(id, position);
+            String stamp = session.get("last-move");
 
+            if (stamp == null)
+            {
+                stamp = "0";
+            }
+
+            return stamp;
+        }
+
+        public String setPosition(Map.Rectangle position)
+        {
+            DateTime now = DateTime.Now;
+            String stamp = now.ToString("yyyyMMddHHmmssfff");
+
+            int id = Convert.ToInt32(session.get("id"));
+            model.updateUserPosition(id, position, now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            session.set("last-move", stamp);
             session.set("pos-x", Convert.ToString(position.x));
             session.set("pos-y", Convert.ToString(position.y));
+
+            return stamp;
         }
 
     }

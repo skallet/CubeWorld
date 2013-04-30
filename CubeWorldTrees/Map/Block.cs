@@ -14,6 +14,8 @@ namespace CubeWorldTrees.Map
 
         private int _player;
 
+        private Boolean _change;
+
         private Rectangle _location;
 
         private Trees.QuadTree.QuadTree<Block> _tree;
@@ -27,6 +29,17 @@ namespace CubeWorldTrees.Map
         {
             get { return _val; }
             set { _val = value; }
+        }
+
+        public Boolean change
+        {
+            get { return _change; }
+            set { _change = true; }
+        }
+
+        public void update()
+        {
+            change = true;
         }
 
         public int player
@@ -47,6 +60,11 @@ namespace CubeWorldTrees.Map
             set { _tree = value; }
         }
 
+        public Boolean isSolid()
+        {
+            return (val == 4);
+        }
+
         #endregion Getters and Setters
 
 
@@ -56,6 +74,8 @@ namespace CubeWorldTrees.Map
         {
             val = Value;
             location = Location;
+            player = 0;
+            _change = false;
         }
 
         #endregion
