@@ -46,6 +46,7 @@ namespace CubeWorldTrees.Map
             model = Model;
 
             space = new Rectangle(0, 0, tiles);
+            Trees.QuadTree.QuadTree<Block>.model = model;
             root = Trees.QuadTree.QuadTree<Block>.getFreeTree(space, treeChaining);
             generator = new MapGenerator(tiles, tiles);
         }
@@ -92,7 +93,7 @@ namespace CubeWorldTrees.Map
 
             Block bottomBlock = null;
 
-            Console.WriteLine("==");
+            //Console.WriteLine("==");
 
             while (height > 0)
             {
@@ -212,12 +213,12 @@ namespace CubeWorldTrees.Map
 
                 if (model.treeExist(coord.x * tiles, coord.y * tiles))
                 {
-                    Console.WriteLine("Loading tree...");
+                    //Console.WriteLine("Loading tree...");
                     treeBlock.tree = model.loadTree(new Rectangle(coord.x, coord.y, tiles));
                 }
                 else
                 {
-                    Console.WriteLine("Creating tree...");
+                    //Console.WriteLine("Creating tree...");
                     Rectangle baseCoords = new Rectangle(coord.x * tiles, coord.y * tiles, coord.width);
                     block.tree = generate(tiles);
 

@@ -1,0 +1,1 @@
+<a href="/logout">Odhlásit se!</a>

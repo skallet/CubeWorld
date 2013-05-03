@@ -19,6 +19,15 @@ namespace CubeWorldTrees.Controlers
         {
             base.BeforeRender();
 
+            String absolutePath = context.Request.Url.AbsolutePath;
+
+            if (absolutePath == "/logout")
+            {
+                user.logout();
+                Redirect("http://" + context.Request.Url.Host + ":" + context.Request.Url.Port + "/");
+                return;
+            }
+
             template.scripts.Add("/content/js/main.js");
         }
 

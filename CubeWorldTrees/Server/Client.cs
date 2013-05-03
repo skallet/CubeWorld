@@ -112,8 +112,10 @@ namespace CubeWorldTrees.Server
                 switch (absolutePath)
                 {
                     case "/":
+                    case "/logout":
                         controler = new Controlers.MapControler(context, server.world);
                         break;
+                    case "/update":
                     case "/initialize":
                     case "/position":
                         controler = new Controlers.JsonControler(context, server.world);

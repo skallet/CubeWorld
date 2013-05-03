@@ -20,7 +20,11 @@ namespace CubeWorldTrees.Trees.QuadTree
 
         QuadTreeNode<T> m_root;
 
+        private Mutex updateMutex;
+
         public static Mutex mutex = new Mutex(false, "treeMutex");
+
+        public static Models.TilesModel model;
 
         const int MAX_INSTANCES = 100;
 
@@ -55,9 +59,11 @@ namespace CubeWorldTrees.Trees.QuadTree
 
                     break;
                 }
-                else if (ts.threadUsers.Count() == 0)
+                else if (treeList.Count() >= MAX_INSTANCES 
+                    && ts.threadUsers.Count() == 0)
                 {
                     //Console.WriteLine("Rewriting tree! {0}", height);
+                    ts.tree.Store(ts.space);
                     treeList.Remove(ts);
                     break;
                 }
@@ -91,6 +97,22 @@ namespace CubeWorldTrees.Trees.QuadTree
             return tree;
         }
 
+        public static void freeAllTree()
+        {
+            System.Diagnostics.Debug.WriteLine("Stored!");
+            TreeStruct ts;
+            mutex.WaitOne();
+
+            for (int i = 0; i < treeList.Count(); i++)
+            {
+                ts = treeList[i];
+                ts.tree.Store(ts.space);
+                treeList.Remove(ts);
+            }
+
+            mutex.ReleaseMutex();
+        }
+
         public static void unsetAllTree()
         {
             int threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
@@ -122,6 +144,61 @@ namespace CubeWorldTrees.Trees.QuadTree
         private QuadTree(Map.Rectangle space) 
         {
             m_root = new QuadTreeNode<T>(space);
+            updateMutex = new Mutex(false);
+        }
+
+        public void Store(Map.Rectangle space)
+        {
+            if (model != null)
+            {
+                T block;
+                for (int x = 0; x < m_root.getTiles(); x++)
+                {
+                    for (int y = 0; y < m_root.getTiles(); y++)
+                    {
+                        block = Get(new Map.Rectangle(x, y, 1));
+
+                        if (block != null && block.change == true)
+                        {
+                            model.updateTile(x + space.x * m_root.getTiles(), y + space.y * m_root.getTiles(), block.player, block.val);
+                        }
+                    }
+                }
+            }
+        }
+
+        public Boolean Update(T item, int user, int changeFrom)
+        {
+            Boolean updated = false;
+            updateMutex.WaitOne();
+
+            T oldItem = Get(item.location);
+            //Console.WriteLine("Try updated x:{0} y:{1} player:{2} value:{3}", oldItem.location.x, oldItem.location.y, oldItem.player, oldItem.val);
+
+            if (oldItem != null)
+            {
+                if (oldItem.player == user
+                    || oldItem.player == 0)
+                {
+                    if (oldItem.val == changeFrom)
+                    {
+                        oldItem.player = user;
+                        oldItem.val = item.val;
+                        oldItem.update();
+
+                        Insert(oldItem);
+                        updated = true;
+
+                        //Console.WriteLine("Updated to x:{0} y:{1} player:{2} value:{3}", oldItem.location.x, oldItem.location.y, oldItem.player, oldItem.val);
+                        oldItem = Get(item.location);
+                        //Console.WriteLine("Test x:{0} y:{1} player:{2} value:{3}", oldItem.location.x, oldItem.location.y, oldItem.player, oldItem.val);
+                    }
+                }
+            }
+
+            updateMutex.ReleaseMutex();
+
+            return updated;
         }
 
         public void Insert(T item)

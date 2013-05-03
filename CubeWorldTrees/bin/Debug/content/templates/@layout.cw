@@ -2,6 +2,10 @@
 
 <html>
     <head>
+      <meta charset="UTF-8">
+      
+      <title>CubeWorld</title>
+    
       {$scripts}
       {$styles}        
     </head>

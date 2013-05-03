@@ -55,6 +55,19 @@ namespace CubeWorldTrees.Models
             return found;
         }
 
+        public void updateTile(int x, int y, int owner, int value)
+        {
+            MySqlCommand cmd = new MySqlCommand();
+            cmd.CommandText = String.Format("UPDATE `tiles` SET `image` = {0}, `owner` = {1} WHERE `coord` = {2}", value, owner, getPolygonString(x, y, 1));
+            cmd.Connection = connection;
+
+            mutex.WaitOne();
+            connection.Open();
+            cmd.ExecuteNonQuery();
+            connection.Close();
+            mutex.ReleaseMutex();
+        }
+
         public void insertTree(Trees.QuadTree.QuadTree<Map.Block> tree, Map.Rectangle location)
         {
             MySqlCommand cmd = new MySqlCommand();
@@ -94,7 +107,6 @@ namespace CubeWorldTrees.Models
             Trees.QuadTree.QuadTree<Map.Block> tree = Trees.QuadTree.QuadTree<Map.Block>.getFreeTree(new Map.Rectangle(coord.x, coord.y, coord.width), 0);
             MySqlCommand cmd = new MySqlCommand();
             cmd.CommandText = String.Format("SELECT `image` AS value, X( POINTN( EXTERIORRING(  `coord` ) , 1 ) ) AS x, Y( POINTN( EXTERIORRING(  `coord` ) , 1 ) ) AS y, owner FROM `tiles` WHERE INTERSECTS(`coord`, {0})", getSearchPolygonString(coord.x * coord.width, coord.y * coord.width, coord.width));
-            System.Diagnostics.Debug.WriteLine(cmd.CommandText);
             cmd.Connection = connection;
 
             mutex.WaitOne();

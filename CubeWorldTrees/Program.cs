@@ -308,10 +308,27 @@ namespace CubeWorldTrees
             Console.WriteLine("Finish all");
             Console.ReadKey();
              */
-            
-            
+
+            Console.CancelKeyPress += delegate(object sender, ConsoleCancelEventArgs e)
+            {
+                Trees.QuadTree.QuadTree<Map.Block>.freeAllTree();
+            };
+
+            AppDomain.CurrentDomain.ProcessExit += ProcessExitHandler;
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
             Server.Server server = new Server.Server();
             return 0;
+        }
+
+        static void ProcessExitHandler(object sender, EventArgs e)
+        {
+            Trees.QuadTree.QuadTree<Map.Block>.freeAllTree();
+        }
+
+        static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            Trees.QuadTree.QuadTree<Map.Block>.freeAllTree();
         }
     }
 }

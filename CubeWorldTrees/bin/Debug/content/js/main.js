@@ -100,6 +100,7 @@ $(document).ready(function () {
   
   canSendQuery = true;   
   $(document).keypress(function (event) {
+    console.log(event.which);
     if (!canSendQuery)
       return;
     canSendQuery = false;
@@ -118,7 +119,57 @@ $(document).ready(function () {
       case 68, 100: x++;
       break;
       case 32:
-        canSendQuery = true; 
+        $.ajax({
+    			url: "/update",
+    			dataType: 'json',
+    			success: (function (data, textStatus, jqXHR) {
+            if (data["status"] == "ok")
+            {
+              for(var i = 0;i < matrix.length;i ++) 
+              {
+                if (matrix[i].length)
+                {
+                  if (matrix[i].x == data["x"]
+                      && matrix[i].y == data["y"])
+                  {
+                    var src = "/content/images/" + data["value"];
+        						var match = -1;
+        						
+        						for(var i = 0;i < blocks.length;i ++) {
+        							if (blocks[i].getAttribute("_src") == src) {
+        								match = i;
+        								break;
+        							}
+        						}
+        						
+        						if (match == -1) {
+        							mapImage = new Image();
+        							mapImage.src = src;
+        							mapImage.setAttribute("_src", src);
+        							mapImage.onload = (function () {
+        								mapImage.setAttribute("loaded", true);
+        							});
+        							match = blocks.length;
+        							blocks[match] = mapImage;
+        						}
+                  
+                    matrix[i].open = data["open"];
+                    matrix[i].src = match;
+                  }
+                } 
+              }
+            
+              canSendQuery = true;
+              Update();
+            }
+            
+            canSendQuery = true;
+    			}),
+    			error: (function () {
+            canSendQuery = true;   
+    			})
+    		});	
+         
         return;
       break;
       

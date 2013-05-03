@@ -131,9 +131,36 @@ namespace CubeWorldTrees.Controlers
                     sb.Append("\"status\": \"error\"");
                 }
             }
-            else if (absolutePath == "/modify")
+            else if (absolutePath == "/update")
             {
-                sb.Append("\"status\": \"error\"");
+                Map.Rectangle pos = user.getPosition();
+                Trees.QuadTree.QuadTree<Map.Block> tree = world.getIntersectTree(pos);
+
+                if (tree != null)
+                {
+                    Map.Block newBlock = new Map.Block(1, pos);
+
+                    if (tree.Update(newBlock, user.getId(), 2))
+                    {
+                        Map.Block updated = tree.Get(pos);
+                        sb.Append(
+                            "\"status\": \"ok\"" +
+                            ",\"x\": " + (pos.x) +
+                            ", \"y\": " + (pos.y) +
+                            ", \"value\": \"" + (updated.val) +
+                            ".png\", \"open\": " + (updated.isSolid() ? "0" : "1") +
+                            ", \"owner\": " + (updated.player)
+                        );
+                    }
+                    else
+                    {
+                        sb.Append("\"status\": \"error\", \"msg\": \"Can't update block!\"");
+                    }
+                }
+                else
+                {
+                    sb.Append("\"status\": \"error\"");
+                }
             }
             
             sb.Append("}");           

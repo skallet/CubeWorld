@@ -26,5 +26,19 @@ namespace CubeWorldTrees.Map
             set;
         }
 
+        Boolean change
+        {
+            get;
+            set;
+        }
+
+        void update();
+
+        int player
+        {
+            get;
+            set;
+        }
+
     }
 }
