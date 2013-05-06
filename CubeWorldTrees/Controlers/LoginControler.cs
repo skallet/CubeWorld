@@ -89,6 +89,15 @@ namespace CubeWorldTrees.Controlers
                 }
                 errors += "</ul>\n";
             }
+
+            //Hash is only for testing purposes! In real application it will be deleted!
+            if (context.Request.QueryString.Count == 2)
+            {
+                String pass = context.Request.QueryString.Get(0);
+                String salt = context.Request.QueryString.Get(1);
+                template.setParameter("hash", pass.Length != 0 && salt.Length != 0 ? user.hash(pass, salt) : "");
+            }
+
             template.setParameter("errors", errors);
         }
 

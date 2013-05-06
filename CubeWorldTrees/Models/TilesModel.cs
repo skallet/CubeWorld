@@ -132,26 +132,25 @@ namespace CubeWorldTrees.Models
 
             read.Close();
             connection.Close();
-
-            /*
-            cmd.CommandText = String.Format("SELECT `id` AS id, X( `position` ) AS x, Y( `position` ) AS y  FROM `players` WHERE INTERSECTS(`position`, {0})", getSearchPolygonString(coord.x * coord.width, coord.y * coord.width, coord.width));
-            connection.Open();
-            read = cmd.ExecuteReader();
-            Map.Block b;
-
-            while (read.Read())
-            {
-                b = tree.Get(new Map.Rectangle(read.GetInt32("x"), read.GetInt32("y"), 1));
-                if (b != null)
-                    b.player = read.GetInt32("id");
-            }
-
-            connection.Close();
-            */
               
             mutex.ReleaseMutex();
 
             return tree;
+        }
+
+        public void RemoveAllTiles()
+        {
+            MySqlCommand cmd = new MySqlCommand();
+            cmd.CommandText = String.Format("TRUNCATE `tiles`");
+            cmd.Connection = connection;
+
+            mutex.WaitOne();
+            connection.Open();
+
+            cmd.ExecuteNonQuery();
+
+            connection.Close();
+            mutex.ReleaseMutex();
         }
 
     }

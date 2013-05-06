@@ -317,6 +317,10 @@ namespace CubeWorldTrees
             AppDomain.CurrentDomain.ProcessExit += ProcessExitHandler;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
+            Console.WriteLine("> Optimal tree size test:");
+            Tests.OptimalTreeSize ots = new Tests.OptimalTreeSize(16, 1, 128, 10);
+            //ots.Run();
+
             Server.Server server = new Server.Server();
             return 0;
         }

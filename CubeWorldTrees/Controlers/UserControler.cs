@@ -90,6 +90,11 @@ namespace CubeWorldTrees.Controlers
             }
         }
 
+        public String hash(string pass, string salt)
+        {
+            return model.encrypt(pass, salt);
+        }
+
         public int getId()
         {
             return Int32.Parse(session.get("id").ToString());

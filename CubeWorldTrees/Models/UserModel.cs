@@ -20,6 +20,7 @@ namespace CubeWorldTrees.Models
         public string encrypt(string password, string salt)
         {
             Byte[] inputBytes = Encoding.UTF8.GetBytes(password + salt);
+
             HashAlgorithm algorithm = SHA256.Create();
 
             return BitConverter.ToString(algorithm.ComputeHash(inputBytes));

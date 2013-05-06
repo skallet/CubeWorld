@@ -87,6 +87,7 @@ namespace CubeWorldTrees.Trees.QuadTree
 
             if (!found)
             {
+                Console.WriteLine("!!");
                 lock (_locker)
                     while (treeList.Count >= MAX_INSTANCES)
                         Monitor.Wait(_locker);
@@ -99,14 +100,14 @@ namespace CubeWorldTrees.Trees.QuadTree
 
         public static void freeAllTree()
         {
-            System.Diagnostics.Debug.WriteLine("Stored!");
             TreeStruct ts;
             mutex.WaitOne();
 
             for (int i = 0; i < treeList.Count(); i++)
             {
                 ts = treeList[i];
-                ts.tree.Store(ts.space);
+                if (ts.height == 0)
+                    ts.tree.Store(ts.space);
                 treeList.Remove(ts);
             }
 

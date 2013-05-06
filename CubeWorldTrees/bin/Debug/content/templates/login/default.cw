@@ -1,5 +1,7 @@
 {$errors}
 
+<input id="hash" type="hidden" value="{$hash}">
+
 <form method='post' action='?do=loginForm-send'>
  <label for='username'>Username:</label>
  <input type='text' name='username' value='{$loginName}' />
