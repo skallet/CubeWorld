@@ -35,11 +35,9 @@ namespace CubeWorldTrees.Controlers
                 List<Map.Block> parts = world.getIntersect(space);
                 int counter = 0;
 
-                
-
                 sb.Append("\"position\": {\"x\": " + position.x + ", \"y\": " + position.y + ", \"utime\": " + (user.getLastMoveTimestamp()) + ", \"id\": " + (user.getId()) + "}");
 
-                List<System.Collections.Hashtable> users = user.model.getUsers();
+                List<System.Collections.Hashtable> users = user.model.getUsers(position);
                 if (users.Count() > 0)
                 {
                     sb.Append(",");
@@ -76,7 +74,8 @@ namespace CubeWorldTrees.Controlers
             }
             else if (absolutePath == "/position")
             {
-                if (context.Request.QueryString.GetKey(0) == "x"
+                if (context.Request.QueryString.Count == 2
+                    && context.Request.QueryString.GetKey(0) == "x"
                     && context.Request.QueryString.GetKey(1) == "y")
                 {
                     int x = Convert.ToInt32(context.Request.QueryString.Get(0));
@@ -98,8 +97,8 @@ namespace CubeWorldTrees.Controlers
                             {
                                 Map.Rectangle position = user.getPosition();
 
-                                if (Math.Abs(x - position.x) <= 1
-                                    && Math.Abs(y - position.y) <= 1)
+                                if (Math.Abs(x - position.x) <= 2
+                                    && Math.Abs(y - position.y) <= 2)
                                 {
                                     String ut = user.setPosition(pos);
                                     position = user.getPosition();

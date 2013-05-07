@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Net;
+using System.IO;
 using CubeWorldTrees.Server;
 
 namespace CubeWorldTrees.Controlers
@@ -37,8 +38,18 @@ namespace CubeWorldTrees.Controlers
 
             if (!session.isEmpty() && !session.isValid())
             {
+                bool found = false;
+
                 session.unset();
-                sid = Guid.NewGuid().ToString();
+                while (!found)
+                {
+                    sid = Guid.NewGuid().ToString();
+                    if (!File.Exists(Session.SAVE_PATH + sid + ".session"))
+                    {
+                        found = true;
+                    }
+                }
+                
                 session = new Session(sid);
             }
 

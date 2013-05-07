@@ -19,5 +19,15 @@ namespace CubeWorldTrees.Models
             connection = Connection;
         }
 
+        protected String getSearchPolygonString(int x, int y, int width)
+        {
+            return String.Format("PolyFromText('Polygon(({0} {1}, {2} {1}, {2} {3}, {0} {3}, {0} {1}))')", x + 1, y + 1, x + width - 1, y + width - 1);
+        }
+
+        protected String getPolygonString(int x, int y, int width)
+        {
+            return String.Format("PolyFromText('Polygon(({0} {1}, {2} {1}, {2} {3}, {0} {3}, {0} {1}))')", x, y, x + width, y + width);
+        }
+
     }
 }

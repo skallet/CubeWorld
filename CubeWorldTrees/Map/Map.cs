@@ -82,6 +82,8 @@ namespace CubeWorldTrees.Map
             return quadTree;
         }
 
+        Mutex initMutex = new Mutex(false, "searchTree");
+
         protected Block getBottomTreeBlock(Rectangle coords)
         {
             int newX = coords.x, newY = coords.y;
@@ -95,6 +97,7 @@ namespace CubeWorldTrees.Map
 
             //Console.WriteLine("==");
 
+            initMutex.WaitOne();
             while (height > 0)
             {
                 parent = node;
@@ -120,7 +123,8 @@ namespace CubeWorldTrees.Map
 
                 node = bottomBlock.tree;
             }
-            
+            initMutex.ReleaseMutex();
+
             return bottomBlock;
         }
 
@@ -136,6 +140,7 @@ namespace CubeWorldTrees.Map
 
             Block bottomBlock = null;
 
+            initMutex.WaitOne();
             while (height > 0)
             {
                 parent = node;
@@ -160,6 +165,7 @@ namespace CubeWorldTrees.Map
 
                 node = bottomBlock.tree;
             }
+            initMutex.ReleaseMutex();
 
             if (parent != null)
             {
@@ -194,6 +200,8 @@ namespace CubeWorldTrees.Map
             return tree.Get(localCoord);
         }
 
+        Mutex getMutex = new Mutex(false, "getTree");
+
         public Trees.QuadTree.QuadTree<Block> getTree(Rectangle coord)
         {
             //Console.WriteLine("Tree: {0} {1}", coord.x, coord.y);
@@ -207,6 +215,7 @@ namespace CubeWorldTrees.Map
                 return null;
             }
 
+            getMutex.WaitOne();
             if (treeBlock == null || treeBlock.tree == null || treeBlock.tree.DumpCount() == 0)
             {
                 Block block = new Block(0, coord);
@@ -219,13 +228,14 @@ namespace CubeWorldTrees.Map
                 else
                 {
                     //Console.WriteLine("Creating tree...");
-                    Rectangle baseCoords = new Rectangle(coord.x * tiles, coord.y * tiles, coord.width);
+                    Rectangle baseCoords = new Rectangle(coord.x * tiles, coord.y * tiles, tiles);
                     block.tree = generate(tiles);
 
                     model.insertTree(block.tree, baseCoords);
                     treeBlock.tree = model.loadTree(new Rectangle(coord.x, coord.y, tiles));
                 }
             }
+            getMutex.ReleaseMutex();
 
             //Console.WriteLine("DUMP {0}", treeBlock.tree.DumpCount());
             return treeBlock.tree;
@@ -240,6 +250,8 @@ namespace CubeWorldTrees.Map
             return getTree(treeCoord);
         }
 
+        Mutex intersectMutex = new Mutex(false, "intersect");
+
         public List<Block> getIntersect(Rectangle space)
         {
             List<Block> list = new List<Block>();
@@ -248,6 +260,8 @@ namespace CubeWorldTrees.Map
             Rectangle coords;
             Boolean added = false;
             Block treeBlock;
+
+            intersectMutex.WaitOne();
             for (int x = 0; x < 2; x++)
             {
                 for (int y = 0; y < 2; y++)
@@ -274,6 +288,7 @@ namespace CubeWorldTrees.Map
                     }
                 }
             }
+            intersectMutex.ReleaseMutex();
 
             /*Console.WriteLine("Space {0} {1} => {2} {3}", space.x, space.y, space.x + space.width, space.y + space.width);
             Console.WriteLine("In {0} tree.", listTree.Count());
@@ -295,13 +310,13 @@ namespace CubeWorldTrees.Map
                         if (space.Contains(new Rectangle(x + i.location.x * i.location.width, y + i.location.y * i.location.width, 1))) 
                         {
                             block = i.tree.Get(new Rectangle(x, y, 1));
-                            bx = block.location.x + i.location.x * i.location.width;
-                            by = block.location.y + i.location.y * i.location.width;
 
                             if (block != null)
                             {
+                                bx = block.location.x + i.location.x * i.location.width;
+                                by = block.location.y + i.location.y * i.location.width;
+
                                 list.Add(new Block(block.val, new Rectangle(bx, by, 1)));
-                                //System.Threading.Thread.Sleep(500);
                             }
                         }
                     }

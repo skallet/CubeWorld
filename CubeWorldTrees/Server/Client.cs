@@ -53,7 +53,8 @@ namespace CubeWorldTrees.Server
 
                 if (!File.Exists(imgFile))
                 {
-                    //TODO: 404 file not found
+                    //404 file not found
+                    context.Response.StatusCode = 404;
                     context.Response.OutputStream.Close();
                 }
                 else
@@ -129,11 +130,13 @@ namespace CubeWorldTrees.Server
                 }
 
                 controler.Run();
+
+                Trees.QuadTree.QuadTree<Map.Block>.unsetAllTree();
             }
 
-            Trees.QuadTree.QuadTree<Map.Block>.unsetAllTree();
-
             sw.Stop();
+
+            Server.maxClientsAtOnce.Release();
             Console.WriteLine("> Request was completed for {1} ms", context.Request.RemoteEndPoint.Address, sw.ElapsedMilliseconds);
         }
 

@@ -83,13 +83,20 @@ namespace CubeWorldTrees.Models
             mutex.ReleaseMutex();
         }
 
-        public List<System.Collections.Hashtable> getUsers()
+        public List<System.Collections.Hashtable> getUsers(Map.Rectangle position = null)
         {
             List<System.Collections.Hashtable> list = new List<System.Collections.Hashtable>();
             System.Collections.Hashtable user;
 
             MySqlCommand cmd = new MySqlCommand();
-            cmd.CommandText = String.Format("SELECT `id` AS id, X( `position` ) AS x, Y( `position` ) AS y  FROM `players`");
+            if (position != null)
+            {
+                cmd.CommandText = String.Format("SELECT `id` AS id, X( `position` ) AS x, Y( `position` ) AS y  FROM `players` WHERE INTERSECTS(`position`, {0}) LIMIT 10", getSearchPolygonString(position.x - 8, position.y - 8, 16));
+            }
+            else
+            {
+                cmd.CommandText = String.Format("SELECT `id` AS id, X( `position` ) AS x, Y( `position` ) AS y  FROM `players`");
+            }
             cmd.Connection = connection;
 
             mutex.WaitOne();

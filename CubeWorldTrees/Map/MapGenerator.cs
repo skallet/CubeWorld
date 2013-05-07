@@ -73,14 +73,15 @@ namespace CubeWorldTrees.Map
             _world = new Block[width, height];
             Random rand = new Random();
             int value;
-            Rectangle location;
+            Rectangle location = new Rectangle(0, 0, 1);
             
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
                 {
-                    location = new Rectangle(x, y, 1);
-                    //_world[x, y] = new Block(x * y, location);
+                    location.x = x;
+                    location.y = y;
+                    
                     value = rand.Next(1, 5);
                     _world[x, y] = new Block(value, location);
                 }

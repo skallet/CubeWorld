@@ -14,7 +14,7 @@ namespace CubeWorldTrees.Server
 
         public static MySqlConnection connection;
 
-        public Models.UserModel users;
+        public static Semaphore maxClientsAtOnce = new Semaphore(25, 25);
 
         public static HttpListener listener = new HttpListener();
         public Map.Map world;
@@ -39,9 +39,15 @@ namespace CubeWorldTrees.Server
 
             while (true)
             {
-                HttpListenerContext context = listener.GetContext();
-                new Thread(new Client(this, context).processRequest).Start();
+                maxClientsAtOnce.WaitOne();
+                Accept();
             }
+        }
+
+        protected void Accept()
+        {
+            HttpListenerContext context = listener.GetContext();
+            new Thread(new Client(this, context).processRequest).Start();
         }
 
         #endregion constructors

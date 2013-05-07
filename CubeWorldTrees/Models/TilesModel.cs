@@ -18,16 +18,6 @@ namespace CubeWorldTrees.Models
             tiles = Tiles;
         }
 
-        protected String getSearchPolygonString(int x, int y, int width)
-        {
-            return String.Format("PolyFromText('Polygon(({0} {1}, {2} {1}, {2} {3}, {0} {3}, {0} {1}))')", x + 1, y + 1, x + width - 1, y + width - 1);
-        }
-
-        protected String getPolygonString(int x, int y, int width)
-        {
-            return String.Format("PolyFromText('Polygon(({0} {1}, {2} {1}, {2} {3}, {0} {3}, {0} {1}))')", x, y, x + width, y + width);
-        }
-
         public Boolean treeExist(int x, int y)
         {
             Boolean found = false;
@@ -73,33 +63,35 @@ namespace CubeWorldTrees.Models
             MySqlCommand cmd = new MySqlCommand();
             cmd.CommandText = String.Format("INSERT INTO `tiles` (`coord`, `image`) VALUES");
             cmd.Connection = connection;
-            int count = 0;
+            bool first = true;
 
             for (int x = 0; x < tiles; x++)
             {
                 for (int y = 0; y < tiles; y++)
                 {
-                    count++;
                     Map.Block block = tree.Get(new Map.Rectangle(x, y, 1));
-                    cmd.CommandText += String.Format("({0}, {1})", getPolygonString(x + location.x, y + location.y, block.location.width), block.val);
 
-                    if (x != tiles - 1 || y != tiles - 1)
+                    if (block != null)
                     {
-                        cmd.CommandText += ",";
+                        if (!first)
+                        {
+                            cmd.CommandText += ",";
+                        }
+                        else
+                        {
+                            first = false;
+                        }
+
+                        cmd.CommandText += String.Format("({0}, {1})", getPolygonString(x + location.x, y + location.y, block.location.width), block.val);
                     }
                 }
             }
-
-            Program.TotalInserted += count;
 
             mutex.WaitOne();
             connection.Open();
             cmd.ExecuteNonQuery();
             connection.Close();
             mutex.ReleaseMutex();
-
-            //Console.WriteLine("Inserted {0}", count);
-            //treeExist(location.x, location.y);
         }
 
         public Trees.QuadTree.QuadTree<Map.Block> loadTree(Map.Rectangle coord)

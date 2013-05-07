@@ -63,7 +63,8 @@ namespace CubeWorldTrees.Trees.QuadTree
                     && ts.threadUsers.Count() == 0)
                 {
                     //Console.WriteLine("Rewriting tree! {0}", height);
-                    ts.tree.Store(ts.space);
+                    if (ts.height == 0)
+                        ts.tree.Store(ts.space);
                     treeList.Remove(ts);
                     break;
                 }
@@ -87,10 +88,12 @@ namespace CubeWorldTrees.Trees.QuadTree
 
             if (!found)
             {
-                Console.WriteLine("!!");
+                System.Diagnostics.Debug.WriteLine("Wait for memory!");
                 lock (_locker)
-                    while (treeList.Count >= MAX_INSTANCES)
-                        Monitor.Wait(_locker);
+                {
+                    Monitor.Wait(_locker);
+                }
+                System.Diagnostics.Debug.WriteLine("Memory available!");
                 
                 return getFreeTree(space, height);
             }
@@ -121,7 +124,7 @@ namespace CubeWorldTrees.Trees.QuadTree
 
             mutex.WaitOne();
 
-            for (int i = 0; i < treeList.Count; i++)
+            for (int i = 0; i < treeList.Count(); i++)
             {
                 ts = treeList[i];
 
@@ -133,7 +136,7 @@ namespace CubeWorldTrees.Trees.QuadTree
                     {
                         lock (_locker)
                         {
-                            Monitor.Pulse(_locker);
+                            Monitor.PulseAll(_locker);
                         }
                     }
                 }
@@ -153,11 +156,14 @@ namespace CubeWorldTrees.Trees.QuadTree
             if (model != null)
             {
                 T block;
+                Map.Rectangle loc = new Map.Rectangle(0, 0, 1);
                 for (int x = 0; x < m_root.getTiles(); x++)
                 {
                     for (int y = 0; y < m_root.getTiles(); y++)
                     {
-                        block = Get(new Map.Rectangle(x, y, 1));
+                        loc.x = x;
+                        loc.y = y;
+                        block = Get(loc);
 
                         if (block != null && block.change == true)
                         {
