@@ -88,12 +88,12 @@ namespace CubeWorldTrees.Trees.QuadTree
 
             if (!found)
             {
-                System.Diagnostics.Debug.WriteLine("Wait for memory!");
+                //System.Diagnostics.Debug.WriteLine("Wait for memory!");
                 lock (_locker)
                 {
                     Monitor.Wait(_locker);
                 }
-                System.Diagnostics.Debug.WriteLine("Memory available!");
+                //System.Diagnostics.Debug.WriteLine("Memory available!");
                 
                 return getFreeTree(space, height);
             }

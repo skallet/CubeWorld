@@ -51,7 +51,10 @@ namespace CubeWorldTrees.Map
         public Rectangle location
         {
             get { return _location; }
-            set { _location = value; }
+            set {
+                Rectangle loc = value as Rectangle;
+                _location = new Rectangle(loc.x, loc.y, loc.width); 
+            }
         }
 
         public Trees.QuadTree.QuadTree<Block> tree

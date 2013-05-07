@@ -94,6 +94,8 @@
     <Compile Include="Server\Server.cs" />
     <Compile Include="Server\Session.cs" />
     <Compile Include="Templates\Template.cs" />
+    <Compile Include="Tests\BaseTest.cs" />
+    <Compile Include="Tests\OptimalTreeSize.cs" />
     <Compile Include="Trees\BaseTree.cs" />
     <Compile Include="Trees\BPlusTree.cs" />
     <Compile Include="Trees\BTree.cs" />

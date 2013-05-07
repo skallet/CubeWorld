@@ -71,6 +71,10 @@ namespace CubeWorldTrees.Map
                         if (block != null)
                         {
                             quadTree.Insert(block);
+                            if (quadTree.Get(new Rectangle(x, y, 1)) == null)
+                            {
+                                Console.WriteLine("Debilni insert?");
+                            }
                             //Console.WriteLine("Inserted ({0}, {1}): {2}", block.location.x, block.location.y, quadTree.Get(new Rectangle(x, y, 1)) != null);
                         }
                         else
@@ -81,8 +85,6 @@ namespace CubeWorldTrees.Map
 
             return quadTree;
         }
-
-        Mutex initMutex = new Mutex(false, "searchTree");
 
         protected Block getBottomTreeBlock(Rectangle coords)
         {
@@ -97,7 +99,6 @@ namespace CubeWorldTrees.Map
 
             //Console.WriteLine("==");
 
-            initMutex.WaitOne();
             while (height > 0)
             {
                 parent = node;
@@ -123,7 +124,6 @@ namespace CubeWorldTrees.Map
 
                 node = bottomBlock.tree;
             }
-            initMutex.ReleaseMutex();
 
             return bottomBlock;
         }
@@ -140,7 +140,6 @@ namespace CubeWorldTrees.Map
 
             Block bottomBlock = null;
 
-            initMutex.WaitOne();
             while (height > 0)
             {
                 parent = node;
@@ -165,7 +164,6 @@ namespace CubeWorldTrees.Map
 
                 node = bottomBlock.tree;
             }
-            initMutex.ReleaseMutex();
 
             if (parent != null)
             {
@@ -250,8 +248,6 @@ namespace CubeWorldTrees.Map
             return getTree(treeCoord);
         }
 
-        Mutex intersectMutex = new Mutex(false, "intersect");
-
         public List<Block> getIntersect(Rectangle space)
         {
             List<Block> list = new List<Block>();
@@ -261,7 +257,6 @@ namespace CubeWorldTrees.Map
             Boolean added = false;
             Block treeBlock;
 
-            intersectMutex.WaitOne();
             for (int x = 0; x < 2; x++)
             {
                 for (int y = 0; y < 2; y++)
@@ -288,7 +283,6 @@ namespace CubeWorldTrees.Map
                     }
                 }
             }
-            intersectMutex.ReleaseMutex();
 
             /*Console.WriteLine("Space {0} {1} => {2} {3}", space.x, space.y, space.x + space.width, space.y + space.width);
             Console.WriteLine("In {0} tree.", listTree.Count());

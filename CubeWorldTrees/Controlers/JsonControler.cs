@@ -88,7 +88,7 @@ namespace CubeWorldTrees.Controlers
                     {
                         Map.Block moveBlock = tree.Get(pos);
 
-                        if (!moveBlock.isSolid())
+                        if (moveBlock != null && !moveBlock.isSolid())
                         {
                             UInt64 lm = UInt64.Parse(user.getLastMoveTimestamp());
                             UInt64 now = UInt64.Parse(DateTime.Now.ToString("yyyyMMddHHmmssfff"));
